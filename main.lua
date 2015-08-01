@@ -16,6 +16,22 @@ require('assetloader')
 require('soundmanager')
 require('world')
 
+GameState = { Menu = 1, Game = 2 }
+game_state = GameState.Menu
+
+function getGameState()
+	return game_state
+end
+
+function setGameState(new_game_state)
+	game_state = new_game_state
+	if game_state == GameState.Menu then
+		World.reset(true)
+	else
+		World.reset()
+	end
+end
+
 function love.load()
 	love.graphics.setFont(Assets.fonts.Hyperspace_Bold.default)
 
@@ -32,9 +48,8 @@ function love.resize()
 end
 
 function love.mousepressed(x, y, button)
-	if not game_started then
-		game_started = true
-		World.reset()
+	if getGameState() == GameState.Menu then
+		setGameState(GameState.Game)
 	else
 		if button == 'l' then
 			World.addEntity(
@@ -63,27 +78,62 @@ end
 function love.keypressed(key, isRepeat)
 	if isRepeat then return end
 
-	if key == 'r' and game_started then
-		game_started = false
-		World.reset(true)
-	elseif key == 'f11' then
+	local gameState = getGameState()
+
+	-- Game logic
+	if gameState == GameState.Menu then
+		-- Any key should activate the game
+		setGameState(GameState.Game)
+	elseif gameState == GameState.Game then
+		if key == 'r' then
+			setGameState(GameState.Menu)
+		end		
+	end
+	
+	-- Non-game functionality
+	if key == 'f11' then
 		love.window.setFullscreen(not love.window.getFullscreen())
 	elseif key == 'escape' then
 		love.event.quit()
-	elseif not game_started then
-		game_started = true
-		World.reset()
 	end
 end
 
 function love.update(delta)
 	SoundManager.update()
 
-	if game_started then
+	if getGameState() == GameState.Game then
 		World.update(delta)
 	end
 
 	collectgarbage('step', 512)
+end
+
+function DrawMenu()
+	love.graphics.push('all')
+		love.graphics.setFont(Assets.fonts.Hyperspace_Bold.verylarge)
+
+		local text = 'Spacewar!'
+		local textWidth = love.graphics.getFont():getWidth(text)
+		local textHeight = love.graphics.getFont():getHeight(text)
+
+		love.graphics.print(text, (love.graphics.getWidth() - textWidth) / 2, (love.graphics.getHeight() / 2) - textHeight)
+
+		if love.timer.getTime() % 2 > 0.5 then
+			love.graphics.setFont(Assets.fonts.Hyperspace_Bold.large)
+
+			local text = 'Press any key to begin.'
+			local textWidth = love.graphics.getFont():getWidth(text)
+			local textHeight = love.graphics.getFont():getHeight(text)
+
+			love.graphics.print(text, (love.graphics.getWidth() - textWidth) / 2, (love.graphics.getHeight() / 2) + textHeight)
+		end
+	love.graphics.pop()
+end
+
+function DrawGame()
+	MotionBlur.update()
+		World.draw()
+	MotionBlur.draw()
 end
 
 function love.draw()
@@ -91,30 +141,12 @@ function love.draw()
 		Bloom.preDraw()
 			StarField.draw()
 
-			if not game_started then
-				love.graphics.push('all')
-					love.graphics.setFont(Assets.fonts.Hyperspace_Bold.verylarge)
+			local gameState = getGameState()
 
-					local text = 'Spacewar!'
-					local textWidth = love.graphics.getFont():getWidth(text)
-					local textHeight = love.graphics.getFont():getHeight(text)
-
-					love.graphics.print(text, (love.graphics.getWidth() - textWidth) / 2, (love.graphics.getHeight() / 2) - textHeight)
-
-					if love.timer.getTime() % 2 > 0.5 then
-						love.graphics.setFont(Assets.fonts.Hyperspace_Bold.large)
-
-						local text = 'Press any key to begin.'
-						local textWidth = love.graphics.getFont():getWidth(text)
-						local textHeight = love.graphics.getFont():getHeight(text)
-
-						love.graphics.print(text, (love.graphics.getWidth() - textWidth) / 2, (love.graphics.getHeight() / 2) + textHeight)
-					end
-				love.graphics.pop()
-			else
-				MotionBlur.update()
-					World.draw()
-				MotionBlur.draw()
+			if gameState == GameState.Menu then
+				DrawMenu()
+			elseif gameState == GameState.Game then
+				DrawGame()
 			end
 		Bloom.postDraw()
 	Phosphor.postDraw()
