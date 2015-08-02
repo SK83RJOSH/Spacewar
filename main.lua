@@ -114,7 +114,7 @@ function DrawMenu()
 	love.graphics.push('all')
 		love.graphics.setFont(Assets.fonts.Hyperspace_Bold.verylarge)
 
-		local text = 'Spacewar!'
+		local text = love.window.getTitle()
 		local textWidth = love.graphics.getFont():getWidth(text)
 		local textHeight = love.graphics.getFont():getHeight(text)
 
