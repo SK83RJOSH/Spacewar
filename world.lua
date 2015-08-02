@@ -132,16 +132,20 @@ function World.reset(exit)
 	-- Default spawns
 
 	local dimensions = Vector2(love.graphics.getDimensions()) / 2
-	local shipCount = 40
-	local angle = (math.pi * 2) / shipCount
+	local shipCount = 1
+	local angle = math.random() * math.pi * 2
+	local angleStep = (math.pi * 2) / shipCount
 
 	for i = 1, shipCount do
 		World.addEntity(
-			StealthBomber(
-				dimensions + (dimensions * Vector2(math.cos(angle * i), math.sin(angle * i))),
+			Ship(
+				false,
+				dimensions + ((dimensions - Vector2.One * 24) * Vector2(math.cos(angle), math.sin(angle))),
 				Color.FromHSV(math.random(0, 360), 1, 1)
 			)
 		)
+
+		angle = angle + angleStep
 	end
 
 	World.addEntity(Ship(true, dimensions, Color.White))
