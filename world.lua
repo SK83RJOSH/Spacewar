@@ -66,7 +66,9 @@ function World.update(delta)
 				end
 			end
 		end
+	end
 
+	for ship in World.getEntities(Ship) do
 		if ship:isRemoved() and ship.isLocalPlayer then
 			World.reset()
 		end
