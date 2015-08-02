@@ -25,6 +25,7 @@ end
 
 function setGameState(new_game_state)
 	game_state = new_game_state
+
 	if game_state == GameState.Menu then
 		World.reset(true)
 	else
@@ -78,23 +79,23 @@ end
 function love.keypressed(key, isRepeat)
 	if isRepeat then return end
 
-	local gameState = getGameState()
-
-	-- Game logic
-	if gameState == GameState.Menu then
-		-- Any key should activate the game
-		setGameState(GameState.Game)
-	elseif gameState == GameState.Game then
-		if key == 'r' then
-			setGameState(GameState.Menu)
-		end		
-	end
-	
 	-- Non-game functionality
 	if key == 'f11' then
 		love.window.setFullscreen(not love.window.getFullscreen())
 	elseif key == 'escape' then
 		love.event.quit()
+	else
+		local gameState = getGameState()
+
+		-- Game logic
+		if gameState == GameState.Menu then
+			-- Any key should activate the game
+			setGameState(GameState.Game)
+		elseif gameState == GameState.Game then
+			if key == 'r' then
+				setGameState(GameState.Menu)
+			end
+		end
 	end
 end
 
