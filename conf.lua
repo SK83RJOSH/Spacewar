@@ -6,9 +6,9 @@ function love.conf(config)
 	config.console = false
 
 	config.window.title = 'Spacewar!'
-	config.window.icon = 'assets/images/icon.png' -- For use with future versions
+	config.window.icon = 'assets/images/icon.png' -- Due to a (possible) SDL bug this does not affect traybar icon
 	config.window.fullscreentype = 'desktop'
 	config.window.resizable = true
-	config.window.minwidth = 768
-	config.window.minheight = 704
+	config.window.minwidth = 960
+	config.window.minheight = 640
 end
