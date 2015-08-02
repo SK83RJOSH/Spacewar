@@ -4,6 +4,7 @@ require('utils/table')
 
 require('utils/color')
 require('utils/json')
+require('utils/msgpack')
 require('utils/timer')
 require('utils/vector2')
 
