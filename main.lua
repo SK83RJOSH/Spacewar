@@ -5,6 +5,7 @@ require('utils/table')
 require('utils/color')
 require('utils/json')
 require('utils/msgpack')
+require('utils/stack')
 require('utils/timer')
 require('utils/vector2')
 
@@ -32,6 +33,20 @@ function setGameState(new_game_state)
 	else
 		World.reset()
 	end
+end
+
+menu_stack = Stack(Menu)
+
+function pushMenu(menu)
+	menu_stack:push(menu)
+end
+
+function popMenu()
+	menu_stack:pop()
+end
+
+function getActiveMenu()
+	return menu_stack:peek()
 end
 
 function love.load()
