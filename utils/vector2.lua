@@ -2,10 +2,10 @@ Vector2 = class("Vector2")
 
 function Vector2:init(x, y)
 	assert(not x or type(x) == 'number', "You must supply a valid number for X!")
-	assert(not x or type(y) == 'number', "You must supply a valid number for Y!")
+	assert(not y or type(y) == 'number', "You must supply a valid number for Y!")
 
 	self.x = x or 0
-	self.y = y or 0
+	self.y = y or self.x
 end
 
 function Vector2:__tostring()
@@ -74,6 +74,10 @@ function Vector2:angle()
 	return math.atan2(dy, dx)
 end
 
+function Vector2:abs()
+	return Vector2(math.abs(self.x), math.abs(self.y))
+end
+
 function Vector2:normalized()
 	local length = self:length()
 
@@ -116,6 +120,14 @@ function Vector2:rotate(radians)
 	local sin = math.sin(radians)
 
 	return Vector2((cos * self.x) - (sin * self.y), (sin * self.x) + (cos * self.y))
+end
+
+function Vector2:clamp(arg1, arg2)
+	if class.isInstance(arg1, Vector2) then
+		return Vector2(math.clamp(self.x, 0, arg1.x), math.clamp(self.y, 0, arg1.y))
+	end
+
+	return Vector2(math.clamp(self.x, arg1, arg2), math.clamp(self.y, arg1, arg2))
 end
 
 function Vector2:reflect(vector)
