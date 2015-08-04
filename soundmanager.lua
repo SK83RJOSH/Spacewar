@@ -1,7 +1,7 @@
 SoundManager = {}
 
 local channels = {
-	['default'] = {
+	['master'] = {
 		volume = 1
 	}
 }
@@ -18,6 +18,10 @@ function SoundManager.setChannelVolume(channel, volume)
 	end
 
 	channels[channel].volume = volume
+end
+
+function SoundManager.getChannelVolume(channel)
+	return (channels[channel] and channels[channel].volume or 1) * (channel == 'master' and 1 or channels['master'].volume)
 end
 
 local sounds = {}
@@ -40,7 +44,7 @@ end
 function SoundManager.play(source, params)
 	local params = params or {}
 
-	params.channel = params.channel or 'default'
+	params.channel = params.channel or 'master'
 	params.time = params.time or false
 	params.loop = params.loop or false
 	params.pitch = math.max(params.pitch or 1, 0)
@@ -50,7 +54,7 @@ function SoundManager.play(source, params)
 
 	source:setLooping(params.loop)
 	source:setPitch(params.pitch)
-	source:setVolume(params.volume * channels[params.channel].volume)
+	source:setVolume(params.volume * SoundManager.getChannelVolume(channel))
 	source:play()
 
 	table.insert(sounds, {
