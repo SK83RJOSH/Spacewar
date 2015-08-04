@@ -23,7 +23,7 @@ end
 
 function Stack:push(item)
 	if self.class then
-		assert(class.isInstance(item, self.class), "Item must be a valid " .. (self.class.name or "Unknown Class"))
+		assert(class.isInstance(item) and (class.isInstance(item, self.class) or item.class:extends(self.class)), "Item must be a valid " .. (self.class.name or "Unknown Class"))
 	end
 
 	table.insert(self.items, item)
