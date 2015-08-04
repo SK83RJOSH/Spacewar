@@ -19,6 +19,6 @@ end
 function ButtonComponent:draw(debug)
 	love.graphics.push('all')
 		love.graphics.setColor(((self.hover or self.active) and Color.Red or Color.White):values())
-		self.super.draw(self, debug)
+		ButtonComponent.super.draw(self, debug)
 	love.graphics.pop()
 end
