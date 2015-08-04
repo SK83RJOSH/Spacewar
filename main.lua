@@ -14,6 +14,8 @@ require('utils/shaders/motionblur')
 require('utils/shaders/phosphor')
 require('utils/shaders/starfield')
 
+require('menus/menu')
+
 require('assetloader')
 require('soundmanager')
 require('world')
@@ -51,8 +53,10 @@ end
 
 function love.load()
 	love.graphics.setFont(Assets.fonts.Hyperspace_Bold.default)
+	love.mouse.setVisible(false)
 
-	SoundManager.setChannelVolume('default', 0.025)
+	SoundManager.setChannelVolume('master', 0.025)
+	pushMenu(MainMenu())
 
 	love.resize()
 end
@@ -64,9 +68,13 @@ function love.resize()
 	StarField.reset()
 end
 
+function love.mousemoved(x, y, dx, dy)
+	getActiveMenu():mousemoved(x, y, dx, dy)
+end
+
 function love.mousepressed(x, y, button)
 	if getGameState() == GameState.Menu then
-		setGameState(GameState.Game)
+		getActiveMenu():mousepressed(x, y, button)
 	else
 		if button == 'l' then
 			World.addEntity(
@@ -105,8 +113,7 @@ function love.keypressed(key, isRepeat)
 
 		-- Game logic
 		if gameState == GameState.Menu then
-			-- Any key should activate the game
-			setGameState(GameState.Game)
+			getActiveMenu():keypressed(key, isRepeat)
 		elseif gameState == GameState.Game then
 			if key == 'r' then
 				setGameState(GameState.Menu)
@@ -115,10 +122,24 @@ function love.keypressed(key, isRepeat)
 	end
 end
 
+function love.gamepadpressed(joystick, button)
+	if getGameState() == GameState.Menu then
+		getActiveMenu():gamepadpressed(joystick, button)
+	end
+end
+
+function love.gamepadaxis(joystick, axis, value)
+	if getGameState() == GameState.Menu then
+		getActiveMenu():gamepadaxis(joystick, axis, value)
+	end
+end
+
 function love.update(delta)
 	SoundManager.update()
 
-	if getGameState() == GameState.Game then
+	if getGameState() == GameState.Menu then
+		getActiveMenu():update()
+	elseif getGameState() == GameState.Game then
 		World.update(delta)
 	end
 
@@ -161,7 +182,8 @@ function love.draw()
 			local gameState = getGameState()
 
 			if gameState == GameState.Menu then
-				DrawMenu()
+				-- DrawMenu()
+				getActiveMenu():draw()
 			elseif gameState == GameState.Game then
 				DrawGame()
 			end
