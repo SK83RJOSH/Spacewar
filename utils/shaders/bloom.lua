@@ -8,14 +8,13 @@ local pass2
 
 function Bloom.reset()
 	canvas = love.graphics.newCanvas(love.graphics.getWidth(), love.graphics.getHeight(), 'rgba4')
-	-- If I were being more conventional I could use this + texture quads to make ships wrap around the screen
-	-- canvas:setWrap('repeat')
+	canvas:setWrap('mirroredrepeat') -- This is getting kind of annoying, the blur on edges is WAY too strong
 
 	pass1 = love.graphics.newCanvas(love.graphics.getWidth(), love.graphics.getHeight(), 'rgba4')
-	pass1:setWrap('mirroredrepeat')
+	pass1:setWrap('mirroredrepeat') -- This is getting kind of annoying, the blur on edges is WAY too strong
 
 	pass2 = love.graphics.newCanvas(love.graphics.getWidth(), love.graphics.getHeight(), 'rgba4')
-	pass2:setWrap('mirroredrepeat')
+	pass2:setWrap('mirroredrepeat') -- This is getting kind of annoying, the blur on edges is WAY too strong
 
 	Assets.shaders.blur:send('canvas_size', {love.graphics.getDimensions()})
 	Assets.shaders.blur:send('blur_amount', 25)
