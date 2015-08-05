@@ -1,10 +1,11 @@
 SoundManager = {}
 
 local channels = {
-	['default'] = {
+	['master'] = {
 		volume = 1
 	}
 }
+local sounds = {}
 
 function SoundManager.getChannels()
 	return channels
@@ -18,9 +19,15 @@ function SoundManager.setChannelVolume(channel, volume)
 	end
 
 	channels[channel].volume = volume
+
+	for k, sound in ipairs(sounds) do
+		sound.source:setVolume(sound.params.volume * SoundManager.getChannelVolume(sound.params.channel))
+	end
 end
 
-local sounds = {}
+function SoundManager.getChannelVolume(channel)
+	return (channels[channel] and channels[channel].volume or 1) * (channel == 'master' and 1 or channels['master'].volume)
+end
 
 function SoundManager.stepSounds()
 	local k = 1
@@ -40,7 +47,7 @@ end
 function SoundManager.play(source, params)
 	local params = params or {}
 
-	params.channel = params.channel or 'default'
+	params.channel = params.channel or 'master'
 	params.time = params.time or false
 	params.loop = params.loop or false
 	params.pitch = math.max(params.pitch or 1, 0)
@@ -50,7 +57,7 @@ function SoundManager.play(source, params)
 
 	source:setLooping(params.loop)
 	source:setPitch(params.pitch)
-	source:setVolume(params.volume * channels[params.channel].volume)
+	source:setVolume(params.volume * SoundManager.getChannelVolume(params.channel))
 	source:play()
 
 	table.insert(sounds, {

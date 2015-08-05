@@ -5,6 +5,7 @@ require('utils/table')
 require('utils/color')
 require('utils/json')
 require('utils/msgpack')
+require('utils/stack')
 require('utils/timer')
 require('utils/vector2')
 
@@ -12,6 +13,8 @@ require('utils/shaders/bloom')
 require('utils/shaders/motionblur')
 require('utils/shaders/phosphor')
 require('utils/shaders/starfield')
+
+require('gui/gui')
 
 require('assetloader')
 require('soundmanager')
@@ -36,8 +39,10 @@ end
 
 function love.load()
 	love.graphics.setFont(Assets.fonts.Hyperspace_Bold.default)
+	love.mouse.setVisible(false)
 
-	SoundManager.setChannelVolume('default', 0.025)
+	SoundManager.setChannelVolume('master', 0.025)
+	GUI.pushMenu(MainMenu())
 
 	love.resize()
 end
@@ -49,10 +54,14 @@ function love.resize()
 	StarField.reset()
 end
 
+function love.mousemoved(x, y, dx, dy)
+	GUI.mousemoved(x, y, dx, dy)
+end
+
 function love.mousepressed(x, y, button)
 	if getGameState() == GameState.Menu then
-		setGameState(GameState.Game)
-	else
+		GUI.mousepressed(x, y, button)
+	elseif getGameState() == GameState.Game then
 		if button == 'l' then
 			World.addEntity(
 				PhotonBeam(
@@ -78,64 +87,45 @@ function love.mousepressed(x, y, button)
 end
 
 function love.keypressed(key, isRepeat)
-	if isRepeat then return end
+	if getGameState() == GameState.Menu then
+		GUI.keypressed(key, isRepeat)
+	end
 
-	-- Non-game functionality
-	if key == 'f11' then
-		love.window.setFullscreen(not love.window.getFullscreen())
-	elseif key == 'escape' then
-		love.event.quit()
-	else
-		local gameState = getGameState()
-
-		-- Game logic
-		if gameState == GameState.Menu then
-			-- Any key should activate the game
-			setGameState(GameState.Game)
-		elseif gameState == GameState.Game then
-			if key == 'r' then
-				setGameState(GameState.Menu)
+	if not isRepeat then
+		if key == 'f11' then
+			love.window.setFullscreen(not love.window.getFullscreen())
+		else
+			if getGameState() == GameState.Game then
+				if key == 'r' or key == 'escape' then
+					setGameState(GameState.Menu)
+				end
 			end
 		end
+	end
+end
+
+function love.gamepadpressed(joystick, button)
+	if getGameState() == GameState.Menu then
+		GUI.gamepadpressed(joystick, button)
+	end
+end
+
+function love.gamepadaxis(joystick, axis, value)
+	if getGameState() == GameState.Menu then
+		GUI.gamepadaxis(joystick, axis, value)
 	end
 end
 
 function love.update(delta)
 	SoundManager.update()
 
-	if getGameState() == GameState.Game then
+	if getGameState() == GameState.Menu then
+		GUI.update(delta)
+	elseif getGameState() == GameState.Game then
 		World.update(delta)
 	end
 
 	collectgarbage('step', 512)
-end
-
-function DrawMenu()
-	love.graphics.push('all')
-		love.graphics.setFont(Assets.fonts.Hyperspace_Bold.verylarge)
-
-		local text = love.window.getTitle()
-		local textWidth = love.graphics.getFont():getWidth(text)
-		local textHeight = love.graphics.getFont():getHeight(text)
-
-		love.graphics.print(text, (love.graphics.getWidth() - textWidth) / 2, (love.graphics.getHeight() / 2) - textHeight)
-
-		if love.timer.getTime() % 2 > 0.5 then
-			love.graphics.setFont(Assets.fonts.Hyperspace_Bold.large)
-
-			local text = 'Press any key to begin.'
-			local textWidth = love.graphics.getFont():getWidth(text)
-			local textHeight = love.graphics.getFont():getHeight(text)
-
-			love.graphics.print(text, (love.graphics.getWidth() - textWidth) / 2, (love.graphics.getHeight() / 2) + textHeight)
-		end
-	love.graphics.pop()
-end
-
-function DrawGame()
-	MotionBlur.update()
-		World.draw()
-	MotionBlur.draw()
 end
 
 function love.draw()
@@ -143,12 +133,12 @@ function love.draw()
 		Bloom.preDraw()
 			StarField.draw()
 
-			local gameState = getGameState()
-
-			if gameState == GameState.Menu then
-				DrawMenu()
-			elseif gameState == GameState.Game then
-				DrawGame()
+			if getGameState() == GameState.Menu then
+				GUI.draw()
+			elseif getGameState() == GameState.Game then
+				MotionBlur.update()
+					World.draw()
+				MotionBlur.draw()
 			end
 		Bloom.postDraw()
 	Phosphor.postDraw()
