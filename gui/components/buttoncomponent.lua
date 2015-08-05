@@ -1,3 +1,5 @@
+require('gui/components/textcomponent')
+
 ButtonComponent = TextComponent:extend("ButtonComponent")
 
 function ButtonComponent:init(position, text, font, callback)

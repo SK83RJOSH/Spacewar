@@ -11,7 +11,7 @@ end
 
 function MenuComponent:getX()
 	if self.position.x == -1 then
-		return (self.parent:getBounds().x - self.bounds.x) / 2
+		return (GUI.getBounds().x - self.bounds.x) / 2
 	end
 
 	return self.position.x
@@ -19,7 +19,7 @@ end
 
 function MenuComponent:getY()
 	if self.position.y == -1 then
-		return (self.parent:getBounds().y - self.bounds.y) / 2
+		return (GUI.getBounds().y - self.bounds.y) / 2
 	end
 
 	return self.position.y
@@ -44,11 +44,9 @@ function MenuComponent:update()
 
 	self.hover = false
 
-	if self.parent:isCursorActive() then
-		local cursor = self.parent:getCursorPosition()
-
-		if self:getX() <= cursor.x and self:getX() + self.bounds.x >= cursor.x then
-			if self:getY() <= cursor.y and self:getY() + self.bounds.y >= cursor.y then
+	if GUI.isCursorActive() then
+		if self:getX() <= GUI.getCursorPosition().x and self:getX() + self.bounds.x >= GUI.getCursorPosition().x then
+			if self:getY() <= GUI.getCursorPosition().y and self:getY() + self.bounds.y >= GUI.getCursorPosition().y then
 				self.hover = true
 			end
 		end
@@ -64,4 +62,5 @@ function MenuComponent:draw(debug)
 	end
 end
 
-require('menus/textcomponent')
+require('gui/components/buttoncomponent')
+require('gui/components/textcomponent')

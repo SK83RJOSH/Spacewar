@@ -15,5 +15,3 @@ function TextComponent:draw(debug)
 
 	TextComponent.super.draw(self, debug)
 end
-
-require('menus/buttoncomponent')

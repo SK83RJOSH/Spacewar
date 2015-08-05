@@ -14,7 +14,7 @@ require('utils/shaders/motionblur')
 require('utils/shaders/phosphor')
 require('utils/shaders/starfield')
 
-require('menus/menu')
+require('gui/gui')
 
 require('assetloader')
 require('soundmanager')
@@ -37,26 +37,12 @@ function setGameState(new_game_state)
 	end
 end
 
-menu_stack = Stack(Menu)
-
-function pushMenu(menu)
-	menu_stack:push(menu)
-end
-
-function popMenu()
-	menu_stack:pop()
-end
-
-function getActiveMenu()
-	return menu_stack:peek()
-end
-
 function love.load()
 	love.graphics.setFont(Assets.fonts.Hyperspace_Bold.default)
 	love.mouse.setVisible(false)
 
 	SoundManager.setChannelVolume('master', 0.025)
-	pushMenu(MainMenu())
+	GUI.pushMenu(MainMenu())
 
 	love.resize()
 end
@@ -69,13 +55,13 @@ function love.resize()
 end
 
 function love.mousemoved(x, y, dx, dy)
-	getActiveMenu():mousemoved(x, y, dx, dy)
+	GUI.mousemoved(x, y, dx, dy)
 end
 
 function love.mousepressed(x, y, button)
 	if getGameState() == GameState.Menu then
-		getActiveMenu():mousepressed(x, y, button)
-	else
+		GUI.mousepressed(x, y, button)
+	elseif getGameState() == GameState.Game then
 		if button == 'l' then
 			World.addEntity(
 				PhotonBeam(
@@ -101,22 +87,18 @@ function love.mousepressed(x, y, button)
 end
 
 function love.keypressed(key, isRepeat)
-	if isRepeat then return end
+	if getGameState() == GameState.Menu then
+		GUI.keypressed(key, isRepeat)
+	end
 
-	-- Non-game functionality
-	if key == 'f11' then
-		love.window.setFullscreen(not love.window.getFullscreen())
-	elseif key == 'escape' then
-		love.event.quit()
-	else
-		local gameState = getGameState()
-
-		-- Game logic
-		if gameState == GameState.Menu then
-			getActiveMenu():keypressed(key, isRepeat)
-		elseif gameState == GameState.Game then
-			if key == 'r' then
-				setGameState(GameState.Menu)
+	if not isRepeat then
+		if key == 'f11' then
+			love.window.setFullscreen(not love.window.getFullscreen())
+		else
+			if getGameState() == GameState.Game then
+				if key == 'r' or key == 'escape' then
+					setGameState(GameState.Menu)
+				end
 			end
 		end
 	end
@@ -124,13 +106,13 @@ end
 
 function love.gamepadpressed(joystick, button)
 	if getGameState() == GameState.Menu then
-		getActiveMenu():gamepadpressed(joystick, button)
+		GUI.gamepadpressed(joystick, button)
 	end
 end
 
 function love.gamepadaxis(joystick, axis, value)
 	if getGameState() == GameState.Menu then
-		getActiveMenu():gamepadaxis(joystick, axis, value)
+		GUI.gamepadaxis(joystick, axis, value)
 	end
 end
 
@@ -138,7 +120,7 @@ function love.update(delta)
 	SoundManager.update()
 
 	if getGameState() == GameState.Menu then
-		getActiveMenu():update()
+		GUI.update(delta)
 	elseif getGameState() == GameState.Game then
 		World.update(delta)
 	end
@@ -146,46 +128,17 @@ function love.update(delta)
 	collectgarbage('step', 512)
 end
 
-function DrawMenu()
-	love.graphics.push('all')
-		love.graphics.setFont(Assets.fonts.Hyperspace_Bold.verylarge)
-
-		local text = love.window.getTitle()
-		local textWidth = love.graphics.getFont():getWidth(text)
-		local textHeight = love.graphics.getFont():getHeight(text)
-
-		love.graphics.print(text, (love.graphics.getWidth() - textWidth) / 2, (love.graphics.getHeight() / 2) - textHeight)
-
-		if love.timer.getTime() % 2 > 0.5 then
-			love.graphics.setFont(Assets.fonts.Hyperspace_Bold.large)
-
-			local text = 'Press any key to begin.'
-			local textWidth = love.graphics.getFont():getWidth(text)
-			local textHeight = love.graphics.getFont():getHeight(text)
-
-			love.graphics.print(text, (love.graphics.getWidth() - textWidth) / 2, (love.graphics.getHeight() / 2) + textHeight)
-		end
-	love.graphics.pop()
-end
-
-function DrawGame()
-	MotionBlur.update()
-		World.draw()
-	MotionBlur.draw()
-end
-
 function love.draw()
 	Phosphor.preDraw()
 		Bloom.preDraw()
 			StarField.draw()
 
-			local gameState = getGameState()
-
-			if gameState == GameState.Menu then
-				-- DrawMenu()
-				getActiveMenu():draw()
-			elseif gameState == GameState.Game then
-				DrawGame()
+			if getGameState() == GameState.Menu then
+				GUI.draw()
+			elseif getGameState() == GameState.Game then
+				MotionBlur.update()
+					World.draw()
+				MotionBlur.draw()
 			end
 		Bloom.postDraw()
 	Phosphor.postDraw()
