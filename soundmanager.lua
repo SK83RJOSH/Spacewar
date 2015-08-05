@@ -5,6 +5,7 @@ local channels = {
 		volume = 1
 	}
 }
+local sounds = {}
 
 function SoundManager.getChannels()
 	return channels
@@ -18,13 +19,15 @@ function SoundManager.setChannelVolume(channel, volume)
 	end
 
 	channels[channel].volume = volume
+
+	for k, sound in ipairs(sounds) do
+		sound.source:setVolume(sound.params.volume * SoundManager.getChannelVolume(sound.params.channel))
+	end
 end
 
 function SoundManager.getChannelVolume(channel)
 	return (channels[channel] and channels[channel].volume or 1) * (channel == 'master' and 1 or channels['master'].volume)
 end
-
-local sounds = {}
 
 function SoundManager.stepSounds()
 	local k = 1
@@ -54,7 +57,7 @@ function SoundManager.play(source, params)
 
 	source:setLooping(params.loop)
 	source:setPitch(params.pitch)
-	source:setVolume(params.volume * SoundManager.getChannelVolume(channel))
+	source:setVolume(params.volume * SoundManager.getChannelVolume(params.channel))
 	source:play()
 
 	table.insert(sounds, {
