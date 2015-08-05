@@ -63,7 +63,13 @@ function GUI.keypressed(key, isRepeat)
 end
 
 function GUI.gamepadpressed(joystick, button)
-	cursorActive = false
+	if table.find({'dpup', 'dpdown', 'dpleft', 'dpright'}, button) then
+		cursorActive = false
+	end
+
+	if GUI.getActiveMenu() then
+		GUI.getActiveMenu():gamepadpressed(joystick, button)
+	end
 end
 
 function GUI.gamepadaxis(joystick, axis, value)

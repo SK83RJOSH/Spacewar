@@ -59,6 +59,18 @@ function Menu:keypressed(key, isRepeat)
 	end
 end
 
+function Menu:gamepadpressed(joystick, button)
+	if button == 'a' then
+		for component in self:getComponents() do
+			if (component.active or component.hover) and component.click then
+				component:click()
+			end
+		end
+	elseif button == 'back' or button == 'b'then
+		GUI.popMenu()
+	end
+end
+
 function Menu:update(delta)
 	for component in self:getComponents() do
 		component:update(delta)

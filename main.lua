@@ -107,6 +107,10 @@ end
 function love.gamepadpressed(joystick, button)
 	if getGameState() == GameState.Menu then
 		GUI.gamepadpressed(joystick, button)
+	elseif getGameState() == GameState.Game then
+		if button == 'back' or button == 'b' or button == 'start' then
+			setGameState(GameState.Menu)
+		end
 	end
 end
 
