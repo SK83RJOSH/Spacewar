@@ -17,6 +17,7 @@ require('utils/shaders/starfield')
 require('gui/gui')
 
 require('assetloader')
+require('settings')
 require('soundmanager')
 require('world')
 
@@ -43,9 +44,16 @@ function love.load()
 	love.graphics.setFont(Assets.fonts.Hyperspace_Bold.default)
 	love.mouse.setVisible(false)
 
-	SoundManager.setChannelVolume('master', 0.025)
-	SoundManager.setChannelVolume('menu', 1)
-	SoundManager.setChannelVolume('sfx', 1)
+	Settings.load()
+
+	love.window.setFullscreen(Settings.get('fullscreen', false))
+
+	phosphor_shader = Settings.get('phosphor_shader', true)
+	bloom_shader = Settings.get('bloom_shader', true)
+
+	SoundManager.setChannelVolume('master', Settings.get('master_volume', 1))
+	SoundManager.setChannelVolume('menu', Settings.get('menu_volume', 1))
+	SoundManager.setChannelVolume('sfx', Settings.get('sfx_volume', 1))
 
 	GUI.pushMenu(MainMenu())
 
