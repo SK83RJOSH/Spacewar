@@ -9,7 +9,7 @@ function OptionsMenu:init()
 		SoundManager.setChannelVolume('master', value)
 	end))
 
-	local offset = 265
+	local offset = 260
 
 	for channelName, channelParams in SoundManager.getChannels() do
 		if channelName ~= 'master' then

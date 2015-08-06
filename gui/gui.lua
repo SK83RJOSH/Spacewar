@@ -94,7 +94,7 @@ function GUI.gamepadaxis(joystick, axis, value)
 			cursorDelta = Vector2()
 		else
 			cursorActive = true
-			cursorDelta = cursorDelta * 10
+			cursorDelta = cursorDelta * math.pow(cursorDelta:length(), 2) * 10
 		end
 	end
 end
@@ -114,9 +114,10 @@ function GUI.draw()
 
 	if GUI.isCursorActive() then
 		love.graphics.push('all')
+			love.graphics.setLineWidth(2)
 			love.graphics.translate(GUI.getCursorPosition():values())
 			love.graphics.setColor(Color.White:values())
-			love.graphics.polygon('fill', 0, 0, 0, 25, 15, 20)
+			love.graphics.polygon('line', 0, 0, 0, 30, 9, 22, 22, 22)
 		love.graphics.pop()
 	end
 end
