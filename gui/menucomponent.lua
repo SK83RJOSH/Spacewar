@@ -64,3 +64,4 @@ end
 
 require('gui/components/buttoncomponent')
 require('gui/components/textcomponent')
+require('gui/components/togglecomponent')
