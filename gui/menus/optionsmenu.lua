@@ -3,19 +3,39 @@ OptionsMenu = Menu:extend("OptionsMenu")
 function OptionsMenu:init()
 	OptionsMenu.super.init(self, love.window.getTitle())
 
-	self:addComponent(ToggleComponent(Vector2(-1, 200), "Mute Sound", SoundManager.getChannelVolume('master') == 0, function(value)
-		if value then
-			SoundManager.setChannelVolume('master', 0)
-		else
-			SoundManager.setChannelVolume('master', 0.025)
-		end
+	self:addComponent(TextComponent(Vector2(-1, 200), 'Sound Options', Assets.fonts.Hyperspace_Bold.normal))
+
+	self:addComponent(SliderComponent(Vector2(-1, 235), 'Master Volume', SoundManager.getChannelVolume('master'), function(value)
+		SoundManager.setChannelVolume('master', value)
 	end))
 
-	self:addComponent(ToggleComponent(Vector2(-1, 225), "Fullscreen", love.window.getFullscreen(), function(value)
+	local offset = 265
+
+	for channelName, channelParams in SoundManager.getChannels() do
+		if channelName ~= 'master' then
+			self:addComponent(SliderComponent(Vector2(-1, offset), channelName .. ' Volume', channelParams.volume, function(value)
+				SoundManager.setChannelVolume(channelName, value)
+			end))
+
+			offset = offset + 25
+		end
+	end
+
+	self:addComponent(TextComponent(Vector2(-1, offset + 30), 'Video Options', Assets.fonts.Hyperspace_Bold.normal))
+
+	self:addComponent(ToggleComponent(Vector2(-1, offset + 65), "Fullscreen", love.window.getFullscreen(), function(value)
 		love.window.setFullscreen(value)
 	end))
 
-	self:addComponent(ButtonComponent(Vector2(-1, 275), "Back", Assets.fonts.Hyperspace_Bold.large, function()
+	self:addComponent(ToggleComponent(Vector2(-1, offset + 90), "Phosphor", phosphor_shader, function(value)
+		phosphor_shader = value
+	end))
+
+	self:addComponent(ToggleComponent(Vector2(-1, offset + 115), "Bloom", bloom_shader, function(value)
+		bloom_shader = value
+	end))
+
+	self:addComponent(ButtonComponent(Vector2(-1, offset + 165), "Back", Assets.fonts.Hyperspace_Bold.large, function()
 		GUI.popMenu()
 	end))
 end

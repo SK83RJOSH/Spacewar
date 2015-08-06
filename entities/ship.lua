@@ -143,6 +143,7 @@ function Ship:update(delta)
 		elseif self.fade > 0 then
 			if not self.isLocalPlayer and self.fade == 255 then
 				SoundManager.play(Assets.sounds.cloak, {
+					channel = 'sfx',
 					pitch = 1 + (-0.4 + (math.random() * 0.8))
 				})
 			end
@@ -274,6 +275,7 @@ function Ship:update(delta)
 	if self.vkForward ~= 0 or self.vkReverse ~= 0 or self.vkLeft ~= 0 or self.vkRight ~= 0 then
 		if not self.thrust then
 			self.thrust = SoundManager.play(Assets.sounds.engine, {
+				channel = 'sfx',
 				loop = true,
 				time = 0.01
 			})
@@ -287,6 +289,7 @@ function Ship:update(delta)
 			self.thrust:stop()
 
 			SoundManager.play(Assets.sounds.engine, {
+				channel = 'sfx',
 				pitch = 1.5 + (math.random() * 0.5)
 			})
 
@@ -312,6 +315,7 @@ function Ship:update(delta)
 		local sound = "shoot" .. math.random(1, 3)
 
 		SoundManager.play(Assets.sounds["shoot" .. math.random(1, 3)], {
+			channel = 'sfx',
 			pitch = 1 + (-0.2 + (math.random() * 0.4))
 		})
 
@@ -390,6 +394,7 @@ end
 function Ship:remove()
 	if not self.removed then
 		SoundManager.play(Assets.sounds.explosion, {
+			channel = 'sfx',
 			pitch = 1 + (-0.2 + (math.random() * 0.4))
 		})
 

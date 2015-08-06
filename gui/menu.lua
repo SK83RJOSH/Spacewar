@@ -44,11 +44,21 @@ function Menu:removeComponent(component)
 end
 
 function Menu:mousepressed(x, y, button)
-	if button ~= 'l' then return end
-
 	for component in self:getComponents() do
-		if (component.active or component.hover) and component.click then
-			component:click()
+		if component.hover and not component.active then
+			component.active = button
+		end
+	end
+end
+
+function Menu:mousereleased(x, y, button)
+	for component in self:getComponents() do
+		if component.active == button then
+			component.active = false
+
+			if button == 'l' and component.hover and component.click then
+				component:click()
+			end
 		end
 	end
 end
@@ -60,14 +70,26 @@ function Menu:keypressed(key, isRepeat)
 end
 
 function Menu:gamepadpressed(joystick, button)
-	if button == 'a' then
+	if button == 'back' or button == 'b'then
+		GUI.popMenu()
+	else
 		for component in self:getComponents() do
-			if (component.active or component.hover) and component.click then
+			if component.hover and not component.active then
+				component.active = button
+			end
+		end
+	end
+end
+
+function Menu:gamepadreleased(joystick, button)
+	for component in self:getComponents() do
+		if component.active == button then
+			component.active = false
+
+			if button == 'a' and component.hover and component.click then
 				component:click()
 			end
 		end
-	elseif button == 'back' or button == 'b'then
-		GUI.popMenu()
 	end
 end
 

@@ -8,7 +8,7 @@ local channels = {
 local sounds = {}
 
 function SoundManager.getChannels()
-	return channels
+	return pairs(channels)
 end
 
 function SoundManager.setChannelVolume(channel, volume)

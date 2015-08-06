@@ -38,6 +38,7 @@ function PhotonBeam:remove()
 	if self.removed then return end
 
 	SoundManager.play(Assets.sounds.photon_death, {
+		channel = 'sfx',
 		pitch = 1 + (-0.4 + (math.random() * 0.8))
 	})
 

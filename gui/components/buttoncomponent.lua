@@ -10,7 +10,7 @@ end
 
 function ButtonComponent:click()
 	SoundManager.play(Assets.sounds.shieldhit, {
-		channel = 'test'
+		channel = 'menu'
 	})
 
 	if self.callback then

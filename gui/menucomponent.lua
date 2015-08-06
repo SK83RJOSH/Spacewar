@@ -63,5 +63,6 @@ function MenuComponent:draw(debug)
 end
 
 require('gui/components/buttoncomponent')
+require('gui/components/slidercomponent')
 require('gui/components/textcomponent')
 require('gui/components/togglecomponent')

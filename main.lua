@@ -22,6 +22,8 @@ require('world')
 
 GameState = { Menu = 1, Game = 2 }
 game_state = GameState.Menu
+phosphor_shader = true
+bloom_shader = true
 
 function getGameState()
 	return game_state
@@ -42,6 +44,9 @@ function love.load()
 	love.mouse.setVisible(false)
 
 	SoundManager.setChannelVolume('master', 0.025)
+	SoundManager.setChannelVolume('menu', 1)
+	SoundManager.setChannelVolume('sfx', 1)
+
 	GUI.pushMenu(MainMenu())
 
 	love.resize()
@@ -86,6 +91,12 @@ function love.mousepressed(x, y, button)
 	end
 end
 
+function love.mousereleased(x, y, button)
+	if getGameState() == GameState.Menu then
+		GUI.mousereleased(x, y, button)
+	end
+end
+
 function love.keypressed(key, isRepeat)
 	if getGameState() == GameState.Menu then
 		GUI.keypressed(key, isRepeat)
@@ -114,6 +125,13 @@ function love.gamepadpressed(joystick, button)
 	end
 end
 
+
+function love.gamepadreleased(joystick, button)
+	if getGameState() == GameState.Menu then
+		GUI.gamepadreleased(joystick, button)
+	end
+end
+
 function love.gamepadaxis(joystick, axis, value)
 	if getGameState() == GameState.Menu then
 		GUI.gamepadaxis(joystick, axis, value)
@@ -133,19 +151,31 @@ function love.update(delta)
 end
 
 function love.draw()
-	Phosphor.preDraw()
-		Bloom.preDraw()
-			StarField.draw()
+	if phosphor_shader then
+		Phosphor.preDraw()
+	end
 
-			if getGameState() == GameState.Menu then
-				GUI.draw()
-			elseif getGameState() == GameState.Game then
-				MotionBlur.update()
-					World.draw()
-				MotionBlur.draw()
-			end
+	if bloom_shader then
+		Bloom.preDraw()
+	end
+
+	StarField.draw()
+
+	if getGameState() == GameState.Menu then
+		GUI.draw()
+	elseif getGameState() == GameState.Game then
+		MotionBlur.update()
+			World.draw()
+		MotionBlur.draw()
+	end
+
+	if bloom_shader then
 		Bloom.postDraw()
-	Phosphor.postDraw()
+	end
+
+	if phosphor_shader then
+		Phosphor.postDraw()
+	end
 
 	local stats = love.graphics.getStats()
 	local fps = love.timer.getFPS()

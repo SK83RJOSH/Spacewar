@@ -50,6 +50,14 @@ function GUI.mousepressed(x, y, button)
 	end
 end
 
+function GUI.mousereleased(x, y, button)
+	GUI.resetCursor()
+
+	if GUI.getActiveMenu() then
+		GUI.getActiveMenu():mousereleased(x, y, button)
+	end
+end
+
 function GUI.keypressed(key, isRepeat)
 	GUI.resetCursor()
 
@@ -69,6 +77,12 @@ function GUI.gamepadpressed(joystick, button)
 
 	if GUI.getActiveMenu() then
 		GUI.getActiveMenu():gamepadpressed(joystick, button)
+	end
+end
+
+function GUI.gamepadreleased(joystick, button)
+	if GUI.getActiveMenu() then
+		GUI.getActiveMenu():gamepadreleased(joystick, button)
 	end
 end
 
