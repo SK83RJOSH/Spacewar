@@ -63,10 +63,11 @@ function GUI.mousereleased(x, y, button)
 end
 
 function GUI.keypressed(key, isRepeat)
-	GUI.resetCursor(true)
 
 	if table.find({'up', 'down', 'left', 'right', 'return', 'backspace'}, key) then
 		cursorActive = false
+	else
+		GUI.resetCursor(true)
 	end
 
 	if GUI.getActiveMenu() then
