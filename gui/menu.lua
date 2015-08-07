@@ -48,7 +48,7 @@ function Menu:selectNext()
 	local activeComponent = false
 
 	for component in self:getComponents() do
-		if component.click then
+		if component.click or class.isInstance(component, SliderComponent) then
 			if not loopComponent then
 				loopComponent = component
 			end
@@ -76,7 +76,7 @@ function Menu:selectPrev()
 	local inactiveComponent = false
 
 	for component in self:getComponents() do
-		if component.click then
+		if component.click or class.isInstance(component, SliderComponent) then
 			if not inactiveComponent then
 				inactiveComponent = component
 			elseif not inactiveComponent.active then
@@ -138,6 +138,16 @@ function Menu:keypressed(key, isRepeat)
 			if component.active then
 				if component.click and (key == 'return' or class.isInstance(component, ToggleComponent)) then
 					component:click()
+				elseif class.isInstance(component, SliderComponent) then
+					if key == 'left' then
+						component.value = math.clamp(component.value - 0.1, 0, 1)
+					elseif key == 'right' then
+						component.value = math.clamp(component.value + 0.1, 0, 1)
+					end
+
+					if component.changeCallback then
+						component.changeCallback(component.value)
+					end
 				end
 			end
 		end
@@ -160,6 +170,16 @@ function Menu:gamepadpressed(joystick, button)
 			if component.active then
 				if component.click and (button == 'a' or class.isInstance(component, ToggleComponent)) then
 					component:click()
+				elseif class.isInstance(component, SliderComponent) then
+					if button == 'dpleft' then
+						component.value = math.clamp(component.value - 0.1, 0, 1)
+					elseif button == 'dpright' then
+						component.value = math.clamp(component.value + 0.1, 0, 1)
+					end
+
+					if component.changeCallback then
+						component.changeCallback(component.value)
+					end
 				end
 			end
 		end

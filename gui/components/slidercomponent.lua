@@ -14,7 +14,7 @@ function SliderComponent:update(delta)
 
 	self.bounds = Vector2(GUI.getBounds().x / 3, self.bounds.y)
 
-	if self.active then
+	if self.active and GUI.isCursorActive() then
 		local value = math.clamp((GUI.getCursorPosition().x - self:getX()) / self.bounds.x, 0, 1)
 
 		if value ~= self.value and self.changeCallback then
@@ -27,7 +27,7 @@ end
 
 function SliderComponent:draw(debug)
 	love.graphics.push('all')
-		love.graphics.setColor(0, 0, 0, self.hover and 150 or 100)
+		love.graphics.setColor(0, 0, 0, (self.hover or (not GUI.isCursorActive() and self.active)) and 150 or 100)
 		love.graphics.rectangle('fill', self:getX(), self:getY(), self.bounds.x, self.bounds.y)
 
 		love.graphics.setColor((((self.hover or self.active) and Color.White or Color.Red) - Color(0, 0, 0, 230)):values())
