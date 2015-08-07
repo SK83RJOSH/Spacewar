@@ -133,7 +133,6 @@ function love.gamepadpressed(joystick, button)
 	end
 end
 
-
 function love.gamepadreleased(joystick, button)
 	if getGameState() == GameState.Menu then
 		GUI.gamepadreleased(joystick, button)

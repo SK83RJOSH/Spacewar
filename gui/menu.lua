@@ -205,8 +205,18 @@ function Menu:gamepadreleased(joystick, button)
 end
 
 function Menu:update(delta)
+	local active = false
+
 	for component in self:getComponents() do
+		if component.active then
+			active = true
+		end
+
 		component:update(delta)
+	end
+
+	if not GUI.isCursorActive() and not active then
+		self:selectNext()
 	end
 end
 
