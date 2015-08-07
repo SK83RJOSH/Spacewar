@@ -96,6 +96,12 @@ function Menu:selectPrev()
 	end
 end
 
+function Menu:clearActive()
+	for component in self:getComponents() do
+		component.active = false
+	end
+end
+
 function Menu:mousepressed(x, y, button)
 	for component in self:getComponents() do
 		if component.hover and not component.active then

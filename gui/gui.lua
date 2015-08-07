@@ -18,9 +18,13 @@ function GUI.getBounds()
 	return Vector2(love.graphics.getDimensions())
 end
 
-function GUI.resetCursor()
+function GUI.resetCursor(position)
+	if not cursorActive and GUI.getActiveMenu() then
+		GUI.getActiveMenu():clearActive()
+	end
+
 	cursorActive = true
-	cursorPosition = Vector2(love.mouse.getPosition())
+	cursorPosition = not position and cursorPosition or Vector2(love.mouse.getPosition())
 	cursorDelta = Vector2()
 end
 
@@ -39,11 +43,11 @@ function GUI.getActiveMenu()
 end
 
 function GUI.mousemoved(x, y, dx, dy)
-	GUI.resetCursor()
+	GUI.resetCursor(true)
 end
 
 function GUI.mousepressed(x, y, button)
-	GUI.resetCursor()
+	GUI.resetCursor(true)
 
 	if GUI.getActiveMenu() then
 		GUI.getActiveMenu():mousepressed(x, y, button)
@@ -51,7 +55,7 @@ function GUI.mousepressed(x, y, button)
 end
 
 function GUI.mousereleased(x, y, button)
-	GUI.resetCursor()
+	GUI.resetCursor(true)
 
 	if GUI.getActiveMenu() then
 		GUI.getActiveMenu():mousereleased(x, y, button)
@@ -59,7 +63,7 @@ function GUI.mousereleased(x, y, button)
 end
 
 function GUI.keypressed(key, isRepeat)
-	GUI.resetCursor()
+	GUI.resetCursor(true)
 
 	if table.find({'up', 'down', 'left', 'right', 'return', 'backspace'}, key) then
 		cursorActive = false
@@ -88,13 +92,14 @@ end
 
 function GUI.gamepadaxis(joystick, axis, value)
 	if axis == 'leftx' or axis == 'lefty' then
-		cursorDelta = Vector2(axis == 'leftx' and value or joystick:getGamepadAxis('leftx'), axis == 'lefty' and value or joystick:getGamepadAxis('lefty'))
+		delta = Vector2(axis == 'leftx' and value or joystick:getGamepadAxis('leftx'), axis == 'lefty' and value or joystick:getGamepadAxis('lefty'))
 
-		if cursorDelta:length() < 0.2 then
+		if delta:length() < 0.2 then
 			cursorDelta = Vector2()
 		else
-			cursorActive = true
-			cursorDelta = cursorDelta * math.pow(cursorDelta:length(), 2) * 10
+			GUI.resetCursor(false)
+
+			cursorDelta = delta * math.pow(delta:length(), 2) * 10
 		end
 	end
 end
