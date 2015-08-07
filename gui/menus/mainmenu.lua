@@ -15,19 +15,3 @@ function MainMenu:init()
 		love.event.quit()
 	end))
 end
-
-function MainMenu:keypressed(key, isRepeat)
-	if key == 'escape' then
-		love.event.quit()
-	end
-
-	MainMenu.super.keypressed(self, key, isRepeat)
-end
-
-function MainMenu:gamepadpressed(joystick, button)
-	if button == 'back' or button == 'b' then
-		love.event.quit()
-	end
-
-	MainMenu.super.gamepadpressed(self, joystick, button)
-end

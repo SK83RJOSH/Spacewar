@@ -43,6 +43,59 @@ function Menu:removeComponent(component)
 	return false
 end
 
+function Menu:selectNext()
+	local loopComponent = false
+	local activeComponent = false
+
+	for component in self:getComponents() do
+		if component.click then
+			if not loopComponent then
+				loopComponent = component
+			end
+
+			if component.active then
+				if activeComponent then
+					activeComponent.active = false
+					activeComponent = false
+				end
+
+				component.active = false
+			elseif not activeComponent then
+				component.active = true
+				activeComponent = component
+			end
+		end
+	end
+
+	if not activeComponent and loopComponent then
+		loopComponent.active = true
+	end
+end
+
+function Menu:selectPrev()
+	local inactiveComponent = false
+
+	for component in self:getComponents() do
+		if component.click then
+			if not inactiveComponent then
+				inactiveComponent = component
+			elseif not inactiveComponent.active then
+				if component.active then
+					inactiveComponent.active = true
+				else
+					inactiveComponent = component
+				end
+			end
+
+			component.active = false
+		end
+	end
+
+	if inactiveComponent and not inactiveComponent.active then
+		inactiveComponent.active = true
+	end
+end
+
 function Menu:mousepressed(x, y, button)
 	for component in self:getComponents() do
 		if component.hover and not component.active then
@@ -64,14 +117,46 @@ function Menu:mousereleased(x, y, button)
 end
 
 function Menu:keypressed(key, isRepeat)
-	if key == 'escape' and not isRepeat then
+	if (key == 'escape' or key == 'backspace') and not isRepeat then
 		GUI.popMenu()
+
+		if not GUI.getActiveMenu() then
+			love.event.quit()
+		end
+	elseif key == 'down' then
+		self:selectNext()
+	elseif key == 'up' then
+		self:selectPrev()
+	elseif table.find({'left', 'right', 'return'}, key) and not GUI.isCursorActive() then
+		for component in self:getComponents() do
+			if component.active then
+				if component.click and (key == 'return' or class.isInstance(component, ToggleComponent)) then
+					component:click()
+				end
+			end
+		end
 	end
 end
 
 function Menu:gamepadpressed(joystick, button)
 	if button == 'back' or button == 'b'then
 		GUI.popMenu()
+
+		if not GUI.getActiveMenu() then
+			love.event.quit()
+		end
+	elseif button == 'dpdown' then
+		self:selectNext()
+	elseif button == 'dpup' then
+		self:selectPrev()
+	elseif table.find({'dpleft', 'dpright', 'a'}, button) and not GUI.isCursorActive() then
+		for component in self:getComponents() do
+			if component.active then
+				if component.click and (button == 'a' or class.isInstance(component, ToggleComponent)) then
+					component:click()
+				end
+			end
+		end
 	else
 		for component in self:getComponents() do
 			if component.hover and not component.active then
