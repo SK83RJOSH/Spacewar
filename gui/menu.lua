@@ -135,10 +135,6 @@ end
 function Menu:keypressed(key, isRepeat)
 	if key == 'escape' and not isRepeat then
 		GUI.popMenu()
-
-		if not GUI.getActiveMenu() then
-			love.event.quit()
-		end
 	elseif key == 'down' then
 		self:selectNext()
 	elseif key == 'up' then
@@ -173,10 +169,6 @@ end
 function Menu:gamepadpressed(joystick, button)
 	if button == 'back' or button == 'b'then
 		GUI.popMenu()
-
-		if not GUI.getActiveMenu() then
-			love.event.quit()
-		end
 	elseif button == 'dpdown' then
 		self:selectNext()
 	elseif button == 'dpup' then

@@ -7,7 +7,7 @@ function JoinMenu:init()
 
 	self:addComponent(label)
 
-	local input = InputComponent(Vector2(-1, 200), "", "IP Address", 15, "0123456789.")
+	local input = InputComponent(Vector2(-1, 200), Settings.get('last_address', ""), "IP Address", 15, "0123456789.")
 
 	self:addComponent(input)
 
@@ -16,6 +16,8 @@ function JoinMenu:init()
 
 		if not input.text:match("(%d+)%.(%d+)%.(%d+)%.(%d+)") then
 			label:setText("Invalid Address!", true)
+		else
+			Settings.set('last_address', input.text)
 		end
 	end))
 

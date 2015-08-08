@@ -36,6 +36,12 @@ end
 
 function GUI.popMenu()
 	menuStack:pop()
+
+	if GUI.getActiveMenu() and GUI.isCursorActive() then
+		GUI.getActiveMenu():clearActive()
+	elseif not GUI.getActiveMenu() then
+		love.event.quit()
+	end
 end
 
 function GUI.getActiveMenu()
