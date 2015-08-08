@@ -43,6 +43,7 @@ end
 function love.load()
 	love.graphics.setFont(Assets.fonts.Hyperspace_Bold.default)
 	love.mouse.setVisible(false)
+	love.keyboard.setKeyRepeat(true)
 
 	Settings.load()
 
@@ -102,6 +103,12 @@ end
 function love.mousereleased(x, y, button)
 	if getGameState() == GameState.Menu then
 		GUI.mousereleased(x, y, button)
+	end
+end
+
+function love.textinput(text)
+	if getGameState() == GameState.Menu then
+		GUI.textinput(text)
 	end
 end
 

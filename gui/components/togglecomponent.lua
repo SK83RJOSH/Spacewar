@@ -22,7 +22,7 @@ end
 function ToggleComponent:update(delta)
 	ToggleComponent.super.update(self, delta)
 
-	self.bounds = Vector2(GUI.getBounds().x / 3, self.bounds.y)
+	self.bounds = Vector2(math.round(GUI.getBounds().x / 3), self.bounds.y)
 end
 
 function ToggleComponent:draw(debug)

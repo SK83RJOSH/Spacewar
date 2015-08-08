@@ -1,6 +1,11 @@
 MenuComponent = class("MenuComponent")
 
+local instances = 0
+
 function MenuComponent:init(position, bounds)
+	instances = instances + 1
+	self.__instance = instances
+
 	self.position = position
 	self.bounds = bounds
 
@@ -9,9 +14,13 @@ function MenuComponent:init(position, bounds)
 	self.hover = false
 end
 
+function MenuComponent:__eq(comparison)
+	return class.isInstance(comparison) and (class.isInstance(comparison, MenuComponent) or comparison.class:extends(MenuComponent)) and self.__instance == comparison.__instance
+end
+
 function MenuComponent:getX()
 	if self.position.x == -1 then
-		return (GUI.getBounds().x - self.bounds.x) / 2
+		return math.round((GUI.getBounds().x - self.bounds.x) / 2)
 	end
 
 	return self.position.x
@@ -19,7 +28,7 @@ end
 
 function MenuComponent:getY()
 	if self.position.y == -1 then
-		return (GUI.getBounds().y - self.bounds.y) / 2
+		return math.round((GUI.getBounds().y - self.bounds.y) / 2)
 	end
 
 	return self.position.y
@@ -63,6 +72,7 @@ function MenuComponent:draw(debug)
 end
 
 require('gui/components/buttoncomponent')
+require('gui/components/inputcomponent')
 require('gui/components/slidercomponent')
 require('gui/components/textcomponent')
 require('gui/components/togglecomponent')

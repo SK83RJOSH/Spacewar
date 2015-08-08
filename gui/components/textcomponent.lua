@@ -7,6 +7,14 @@ function TextComponent:init(position, text, font)
 	TextComponent.super.init(self, position, Vector2(self.font:getWidth(self.text), self.font:getHeight(self.text)))
 end
 
+function TextComponent:setText(text, resize)
+	self.text = text
+
+	if resize then
+		self.bounds = Vector2(self.font:getWidth(self.text), self.font:getHeight(self.text))
+	end
+end
+
 function TextComponent:draw(debug)
 	love.graphics.push('all')
 		love.graphics.setFont(self.font)

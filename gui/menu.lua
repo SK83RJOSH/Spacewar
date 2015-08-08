@@ -26,7 +26,7 @@ function Menu:getComponents(type)
 end
 
 function Menu:addComponent(component)
-	assert(class.isInstance(component) and (class.isInstance(component, Component) or component.class:extends(Component)), "Component must be a valid MenuComponent!")
+	assert(class.isInstance(component) and (class.isInstance(component, MenuComponent) or component.class:extends(MenuComponent)), "Component must be a valid MenuComponent!")
 
 	component:setParent(self)
 
@@ -104,7 +104,9 @@ end
 
 function Menu:mousepressed(x, y, button)
 	for component in self:getComponents() do
-		if component.hover and not component.active then
+		if (component.active == button or component.active == true)and not component.hover then
+			component.active = false
+		elseif component.hover and not component.active then
 			component.active = button
 		end
 	end
@@ -122,8 +124,16 @@ function Menu:mousereleased(x, y, button)
 	end
 end
 
+function Menu:textinput(text)
+	for component in self:getComponents() do
+		if component.textinput then
+			component:textinput(text)
+		end
+	end
+end
+
 function Menu:keypressed(key, isRepeat)
-	if (key == 'escape' or key == 'backspace') and not isRepeat then
+	if key == 'escape' and not isRepeat then
 		GUI.popMenu()
 
 		if not GUI.getActiveMenu() then
@@ -149,6 +159,12 @@ function Menu:keypressed(key, isRepeat)
 						component.changeCallback(component.value)
 					end
 				end
+			end
+		end
+	else
+		for component in self:getComponents() do
+			if component.keypressed then
+				component:keypressed(key, isRepeat)
 			end
 		end
 	end
@@ -185,7 +201,9 @@ function Menu:gamepadpressed(joystick, button)
 		end
 	else
 		for component in self:getComponents() do
-			if component.hover and not component.active then
+			if (component.active == button or component.active == true) and not component.hover then
+				component.active = false
+			elseif component.hover and not component.active then
 				component.active = button
 			end
 		end
@@ -226,5 +244,6 @@ function Menu:draw(debug)
 	end
 end
 
+require('gui/menus/joinmenu')
 require('gui/menus/mainmenu')
 require('gui/menus/optionsmenu')
