@@ -39,7 +39,7 @@ function ReverseThrustersLeft:draw()
 	self.rotation = self.ship.rotation
 	self.position = self.ship.position
 
-	ReverseThrustersLeft.super.draw(self, delta)
+	ReverseThrustersLeft.super.draw(self)
 end
 
 local ReverseThrustersRight = VectorEntity:extend("ReverseThrustersRight")
@@ -60,7 +60,7 @@ function ReverseThrustersRight:draw()
 	self.rotation = self.ship.rotation
 	self.position = self.ship.position
 
-	ReverseThrustersRight.super.draw(self, delta)
+	ReverseThrustersRight.super.draw(self)
 end
 
 Ship = SpaceWarEntity:extend("Ship")
@@ -331,17 +331,17 @@ end
 
 function Ship:draw()
 	if self.forwardThrusterActive and math.random(3) > 1 then
-		self.forwardThrusters:draw(delta)
+		self.forwardThrusters:draw()
 	end
 
 	if math.random(3) > 1 then
 		if self.reverseThrusterActive then
-			self.reverseThrustersLeft:draw(delta)
-			self.reverseThrustersRight:draw(delta)
+			self.reverseThrustersLeft:draw()
+			self.reverseThrustersRight:draw()
 		elseif self.vkLeft ~= 0 and self.vkRight == 0 then
-			self.reverseThrustersLeft:draw(delta)
+			self.reverseThrustersLeft:draw()
 		elseif self.vkRight ~= 0 and self.vkLeft == 0 then
-			self.reverseThrustersRight:draw(delta)
+			self.reverseThrustersRight:draw()
 		end
 	end
 
