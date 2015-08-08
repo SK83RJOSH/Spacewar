@@ -126,9 +126,10 @@ function GUI.draw()
 	if GUI.isCursorActive() then
 		love.graphics.push('all')
 			love.graphics.setLineWidth(2)
+			love.graphics.setLineStyle('rough')
 			love.graphics.translate(GUI.getCursorPosition():values())
 			love.graphics.setColor(Color.White:values())
-			love.graphics.polygon('line', 0, 0, 0, 30, 9, 22, 22, 22)
+			love.graphics.polygon('line', 0, 0, 0, 30, 8, 22, 22, 22)
 		love.graphics.pop()
 	end
 end
