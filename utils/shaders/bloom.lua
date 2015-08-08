@@ -17,8 +17,8 @@ function Bloom.reset()
 	pass2:setWrap('mirroredrepeat') -- This is getting kind of annoying, the blur on edges is WAY too strong
 
 	Assets.shaders.blur:send('canvas_size', {love.graphics.getDimensions()})
-	Assets.shaders.blur:send('blur_amount', 25)
-	Assets.shaders.blur:send('blur_scale', 2)
+	Assets.shaders.blur:send('blur_amount', 50)
+	Assets.shaders.blur:send('blur_scale', 1)
 	Assets.shaders.blur:send('blur_strength', 0.25)
 end
 
