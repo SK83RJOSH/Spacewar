@@ -27,7 +27,7 @@ function VectorEntity:init(collisionRadius)
 end
 
 function VectorEntity:__eq(comparison)
-	return class.isInstance(comparison, VectorEntity) and self.__instance == comparison.__instance
+	return class.isInstance(comparison) and (class.isInstance(comparison, VectorEntity) or comparison.class:extends(VectorEntity)) and self.__instance == comparison.__instance
 end
 
 function VectorEntity:addLine(position1, position2, color)
