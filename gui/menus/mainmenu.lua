@@ -15,7 +15,7 @@ function MainMenu:init()
 		if status then
 			setGameState(GameState.Game)
 		else
-			print(error)
+			GUI.pushMenu(ErrorMenu(error))
 		end
 	end))
 
