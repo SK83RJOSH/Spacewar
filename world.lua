@@ -39,6 +39,50 @@ function World.stepEntities()
 	end
 end
 
+NetworkState = { None = 1, Host = 2, Client = 3 }
+
+local network_state = NetworkState.None
+local sock = nil
+
+function World.getNetworkState()
+	return network_state
+end
+
+function World.setNetworkState(new_network_state, params)
+	network_state = NetworkState.None
+
+	if sock then
+		sock:close()
+		sock = nil
+	end
+
+	if new_network_state ~= NetworkState.None then
+		if not params then
+			params = {}
+		end
+
+		params.address = params.address or '*'
+		params.port = params.port or 8888
+
+		local error = 'Invalid Network State!'
+
+		if new_network_state == NetworkState.Host then
+			sock, error = socket.bind(params.address, params.port)
+		elseif new_network_state == NetworkState.Client then
+			sock, error = socket.connect(params.address, params.port)
+		end
+
+		if sock then
+			network_state = new_network_state
+			sock:settimeout(0)
+		end
+
+		return sock ~= nil, error
+	end
+
+	return true, ''
+end
+
 function World.update(delta)
 	for entity in World.getEntities() do
 		entity:update(delta)
@@ -98,6 +142,17 @@ function World.draw()
 			love.graphics.rectangle('fill', 0, -(love.graphics.getHeight() / 2) - offset, love.graphics.getWidth(), love.graphics.getHeight())
 			love.graphics.rectangle('fill', 0, (love.graphics.getHeight() / 2) + offset, love.graphics.getWidth(), love.graphics.getHeight())
 		end
+
+		love.graphics.setColor(Color.White:values())
+		love.graphics.print("Network State: " .. (table.find(NetworkState, World.getNetworkState()) or "Unknown"), 10, 40)
+
+		if sock then
+			love.graphics.print("Network Host: " .. sock:getsockname(), 10, 60)
+
+			if World.getNetworkState() == NetworkState.Client then
+				love.graphics.print(("Network Stats: %i in %i out"):format(sock:getstats()), 10, 80)
+			end
+		end
 	love.graphics.pop()
 end
 
@@ -125,7 +180,9 @@ function World.reset(exit)
 	entities = {}
 
 	if exit then
+		World.setNetworkState(NetworkState.None)
 		SoundManager.stopAll('default')
+
 		return
 	end
 

@@ -1,5 +1,6 @@
 require('utils/class')
 require('utils/math')
+require('utils/string')
 require('utils/table')
 
 require('utils/color')
@@ -16,15 +17,18 @@ require('utils/shaders/starfield')
 
 require('gui/gui')
 
+require('socket')
 require('assetloader')
 require('settings')
 require('soundmanager')
 require('world')
 
-GameState = { Menu = 1, Game = 2 }
-game_state = GameState.Menu
 phosphor_shader = true
 bloom_shader = true
+
+GameState = { Menu = 1, Game = 2 }
+
+local game_state = GameState.Menu
 
 function getGameState()
 	return game_state
