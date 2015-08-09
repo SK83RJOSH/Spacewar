@@ -236,6 +236,7 @@ function Menu:draw(debug)
 	end
 end
 
+require('gui/menus/errormenu')
 require('gui/menus/joinmenu')
 require('gui/menus/mainmenu')
 require('gui/menus/optionsmenu')

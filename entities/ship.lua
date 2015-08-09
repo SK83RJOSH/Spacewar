@@ -227,7 +227,7 @@ function Ship:update(delta)
 		end
 	-- DEBUG CODE
 
-	if self.isLocalPlayer then
+	if self.isLocalPlayer and self.isLocalPlayer ~= "remote" then
 		self.vkForward = love.keyboard.isDown('w') and 1 or 0
 		self.vkReverse = love.keyboard.isDown('s') and 1 or 0
 		self.vkLeft = love.keyboard.isDown('a') and 1 or 0

@@ -43,6 +43,7 @@ NetworkState = { None = 1, Host = 2, Client = 3 }
 
 local network_state = NetworkState.None
 local sock = nil
+local clients = {}
 
 function World.getNetworkState()
 	return network_state
@@ -54,6 +55,12 @@ function World.setNetworkState(new_network_state, params)
 	if sock then
 		sock:close()
 		sock = nil
+
+		for k, client in ipairs(clients) do
+			client:close()
+		end
+
+		clients = {}
 	end
 
 	if new_network_state ~= NetworkState.None then
@@ -83,7 +90,74 @@ function World.setNetworkState(new_network_state, params)
 	return true, ''
 end
 
+local updateTimer = Timer()
+
 function World.update(delta)
+	if World.getNetworkState() == NetworkState.Host then
+		local client, error = sock:accept()
+
+		if client then
+			print('Client added: ' .. client:getpeername())
+			client:settimeout(0)
+
+			table.insert(clients, client)
+		end
+
+		for k = 1, #clients do
+			local client = clients[k]
+			local data, error = client:receive()
+
+			if data then
+				print(data .. " that's some great soup!")
+			elseif error == 'closed' then
+				print('Client removed: ' .. client:getpeername())
+
+				table.remove(clients, k)
+				k = k - 1
+			elseif #entities > 0 and updateTimer:getTime() > 0.1 then
+				local ship = entities[1]
+
+				client:send(
+					ship.position.x .. "," ..
+					ship.position.y .. "," ..
+					ship.velocity.x .. "," ..
+					ship.velocity.y .. "," ..
+					ship.rotation .. "," ..
+					ship.vkLeft .. "," ..
+					ship.vkRight .. "," ..
+					ship.vkForward .. "," ..
+					ship.vkReverse .. "," ..
+					ship.vkFire .. "\n"
+				)
+
+				updateTimer:restart()
+			end
+		end
+	elseif World.getNetworkState() == NetworkState.Client then
+		local data, error = sock:receive()
+
+		if data then
+			if #entities > 0 then
+				local x, y, dx, dy, rotation, vkLeft, vkRight, vkForward, vkReverse, vkFire = data:split(",")
+				local ship = entities[1]
+
+				ship.position.x = tonumber(x)
+				ship.position.y = tonumber(y)
+				ship.velocity.x = tonumber(dx)
+				ship.velocity.y = tonumber(dy)
+				ship.rotation = tonumber(rotation)
+				ship.vkLeft = tonumber(vkLeft)
+				ship.vkRight = tonumber(vkRight)
+				ship.vkForward = tonumber(vkForward)
+				ship.vkReverse = tonumber(vkReverse)
+				ship.vkFire = tonumber(vkFire)
+			end
+		elseif error == 'closed' then
+			GUI.pushMenu(ErrorMenu("Connection Lost!"))
+			setGameState(GameState.Menu)
+		end
+	end
+
 	for entity in World.getEntities() do
 		entity:update(delta)
 	end
@@ -194,16 +268,16 @@ function World.reset(exit)
 	local angleStep = (math.pi * 2) / shipCount
 
 	for i = 1, shipCount do
-		World.addEntity(
-			Ship(
-				false,
-				dimensions + ((dimensions - Vector2.One * 24) * Vector2(math.cos(angle), math.sin(angle))),
-				Color.FromHSV(math.random(0, 360), 1, 1)
-			)
-		)
+		-- World.addEntity(
+		-- 	Ship(
+		-- 		false,
+		-- 		dimensions + ((dimensions - Vector2.One * 24) * Vector2(math.cos(angle), math.sin(angle))),
+		-- 		Color.FromHSV(math.random(0, 360), 1, 1)
+		-- 	)
+		-- )
 
 		angle = angle + angleStep
 	end
 
-	World.addEntity(Ship(true, dimensions, Color.White))
+	World.addEntity(Ship(World.getNetworkState() == NetworkState.Client and "remote" or true, dimensions, Color.White))
 end
