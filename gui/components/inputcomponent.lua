@@ -2,18 +2,13 @@ require('gui/components/textcomponent')
 
 InputComponent = TextComponent:extend("InputComponent")
 
-function InputComponent:init(position, text, placeholder, maxLength, filter)
+function InputComponent:init(position, text, placeholder, maxLength, filter, callback)
 	InputComponent.super.init(self, position, text)
 
 	self.placeholder = placeholder
 	self.maxLength = maxLength
 	self.filter = filter
-end
-
-function InputComponent:update(delta)
-	InputComponent.super.update(self, delta)
-
-	self.bounds = Vector2(math.round(GUI.getBounds().x / 3), self.bounds.y)
+	self.callback = callback
 end
 
 function InputComponent:textinput(text)
@@ -21,17 +16,39 @@ function InputComponent:textinput(text)
 
 	if not self.maxLength or #self.text < self.maxLength then
 		self.text = self.text .. text
+
+		if self.callback then
+			self.callback(self.text)
+		end
 	end
 end
 
 function InputComponent:keypressed(key, isRepeat)
 	if key == 'backspace' and #self.text > 0 then
 		self.text = self.text:sub(0, #self.text - 1)
+
+		if self.callback then
+			self.callback(self.text)
+		end
 	end
 end
 
 function InputComponent:click()
 	self.active = true
+end
+
+function InputComponent:setText(text, resize)
+	InputComponent.super.setText(self, text, resize)
+
+	if self.callback then
+		self.callback(self.text)
+	end
+end
+
+function InputComponent:update(delta)
+	InputComponent.super.update(self, delta)
+
+	self.bounds = Vector2(math.round(GUI.getBounds().x / 3), self.bounds.y)
 end
 
 function InputComponent:draw(debug)
