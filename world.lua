@@ -181,7 +181,7 @@ function World.reset(exit)
 
 	if exit then
 		World.setNetworkState(NetworkState.None)
-		SoundManager.stopAll('default')
+		SoundManager.stopAll('sfx')
 
 		return
 	end
