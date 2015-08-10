@@ -10,12 +10,39 @@ function PhotonBeam:init(position, color, velocity)
 	self.maximumVelocity = PhotonBeam.MAXIMUM_VELOCITY
 
 	self.position = position
+	self.color = color
 
-	self:addLine(Vector2(-2, -3), Vector2(-2, 3), color)
-	self:addLine(Vector2(2, -3), Vector2(2, 3), color)
+	self:addLine(Vector2(-2, -3), Vector2(-2, 3), self.color)
+	self:addLine(Vector2(2, -3), Vector2(2, 3), self.color)
 
 	self.velocity = velocity
 	self.rotation = math.atan2(self.velocity.y, self.velocity.x) + (math.pi / 2)
+end
+
+function PhotonBeam:buildNetworkConstructor()
+	return {
+		{self.position:values()},
+		{self.color:values()},
+		{self.velocity:values()}
+	}
+end
+
+function PhotonBeam:buildNetworkUpdate()
+	return {
+		self.position.x,
+		self.position.y,
+		self.velocity.x,
+		self.velocity.y,
+		self.rotation
+	}
+end
+
+function PhotonBeam:applyNetworkUpdate(data)
+	self.position.x,
+	self.position.y,
+	self.velocity.x,
+	self.velocity.y,
+	self.rotation = unpack(data)
 end
 
 function PhotonBeam:update(delta)

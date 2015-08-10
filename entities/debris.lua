@@ -23,6 +23,31 @@ function Debris:init(position, color)
 	self.position = position + Vector2(cos * -offset - sin * -offset, cos * -offset + sin * -offset)
 end
 
+function Debris:buildNetworkConstructor()
+	return {
+		{self.position:values()},
+		{self.color:values()}
+	}
+end
+
+function Debris:buildNetworkUpdate()
+	return {
+		self.position.x,
+		self.position.y,
+		self.velocity.x,
+		self.velocity.y,
+		self.rotation
+	}
+end
+
+function Debris:applyNetworkUpdate(data)
+	self.position.x,
+	self.position.y,
+	self.velocity.x,
+	self.velocity.y,
+	self.rotation = unpack(data)
+end
+
 function Debris:update(delta)
 	Debris.super.update(self, delta)
 

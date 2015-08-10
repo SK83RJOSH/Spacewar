@@ -9,6 +9,25 @@ function Explosion:init(position, color, radius)
 	self.timer = Timer()
 end
 
+function Explosion:buildNetworkConstructor()
+	return {
+		{self.position:values()},
+		{self.color:values()},
+		self.radius
+	}
+end
+
+function Explosion:buildNetworkUpdate()
+	return {
+		self.position.x,
+		self.position.y
+	}
+end
+
+function Explosion:applyNetworkUpdate(data)
+	self.position.x, self.position.y = unpack(data)
+end
+
 function Explosion:update(delta)
 	Explosion.super.update(self, delta)
 

@@ -15,6 +15,24 @@ function Sun:init(position)
 	self:addLine(Vector2(1.4 * Sun.SCALE_FACTOR, 1.4 * Sun.SCALE_FACTOR), Vector2(-1.4 * Sun.SCALE_FACTOR, -1.4 * Sun.SCALE_FACTOR), Sun.DEFAULT_COLOR)
 end
 
+function Sun:buildNetworkConstructor()
+	return {
+		{self.position:values()}
+	}
+end
+
+function Sun:buildNetworkUpdate()
+	return {
+		self.position.x,
+		self.position.y,
+		self.rotation
+	}
+end
+
+function Sun:applyNetworkUpdate(data)
+	self.position.x, self.position.y, self.rotation = unpack(data)
+end
+
 function Sun:update(delta)
 	self.rotationDeltaNextFrame = Sun.ROTATION_SPEED * delta
 
