@@ -8,3 +8,22 @@ The feature set will expand as time goes on (assuming I actually get around to w
 Anyone is free to contribute, and no strict styleguide is enforced. Just try to keep it similiar to whatever file you happen to be working in -- commits to regulate style are welcomed -- but I prefer tabs over spaces and camelCase over underscores_where_appropriate.
 
 Licensed under GNU General Public License v2.0
+
+# TODO
+
+- [ ] General gameplay logic
+- [ ] Add gameplay statistics
+- [ ] In-game HUD
+- [ ] Remove debug stuff
+
+# Sync TODO
+
+- [ ] Client controllable ships to network games
+- [ ] Heartbeat events to monitor ping & check for timeouts
+- [ ] Handle varying viewport sizes between client and server
+
+# Possible Features
+
+- DPI Scaling
+- Advanced text input
+- GUI polish
