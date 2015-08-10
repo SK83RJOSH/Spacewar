@@ -18,8 +18,8 @@ Licensed under GNU General Public License v2.0
 
 # Sync TODO
 
-- [ ] Client controllable ships to network games
-- [ ] Heartbeat events to monitor ping & check for timeouts
+- [x] Client controllable ships to network games
+- [x] Heartbeat events to monitor ping & check for timeouts
 - [ ] Handle varying viewport sizes between client and server
 
 # Possible Features

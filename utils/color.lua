@@ -56,7 +56,7 @@ function Color:copy()
 	return Color(self:values())
 end
 
-function Color.FromHSV(hue, saturation, value)
+function Color.fromHSV(hue, saturation, value)
 	assert(type(hue) == 'number', "You must supply a valid number for Hue!")
 	assert(type(saturation) == 'number', "You must supply a valid number for Saturation!")
 	assert(type(value) == 'number', "You must supply a valid number for Value!")

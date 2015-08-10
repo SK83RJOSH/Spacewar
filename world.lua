@@ -61,7 +61,11 @@ NetworkState = { None = 1, Host = 2, Client = 3 }
 
 local network_state = NetworkState.None
 local sock = nil
+local clientID = nil
 local clients = {}
+local clientIDs = {}
+local clientTimers = {}
+local clientTimer = Timer()
 local updateTimer = Timer()
 
 function World.getNetworkState()
@@ -79,7 +83,12 @@ function World.setNetworkState(new_network_state, params)
 			client:close()
 		end
 
+		clientID = nil
 		clients = {}
+		clientIDs = {}
+		clientTimers = {}
+		clientTimer = Timer()
+		updateTimer = Timer()
 	end
 
 	if new_network_state ~= NetworkState.None then
@@ -109,16 +118,23 @@ function World.setNetworkState(new_network_state, params)
 	return true, ''
 end
 
-function World.sendNetworkMessage(message, data, client)
-	local data = MessagePack.pack({
-		message, data
-	})
+function World.sendNetworkMessage(message, data, targetSock)
+	if World.getNetworkState() ~= NetworkState.None then
+		local data = MessagePack.pack({
+			message, data
+		})
+		local message = #data .. "\n" .. data
 
-	if client then
-		client:send(#data .. "\n" .. data)
-	else
-		for k, client in ipairs(clients) do
-			client:send(#data .. "\n" .. data)
+		if targetSock then
+			targetSock:send(message)
+		else
+			if World.getNetworkState() == NetworkState.Host then
+				for k, client in ipairs(clients) do
+					client:send(message)
+				end
+			else
+				sock:send(message)
+			end
 		end
 	end
 end
@@ -130,8 +146,13 @@ function World.processNetworkQueue()
 		local client, error = sock:accept()
 
 		if client then
-			print("Server: Client " .. client:getpeername() .. " added")
+			local clientID = os.time() .. '_' .. math.random(9999)
+
 			client:settimeout(0)
+
+			World.sendNetworkMessage("ClientID", {clientID}, client)
+
+			World.addEntity(Ship(clientID, Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
 
 			for entity in World.getEntities() do
 				World.sendNetworkMessage("EntityCreate", {
@@ -142,24 +163,57 @@ function World.processNetworkQueue()
 			end
 
 			table.insert(clients, client)
+			table.insert(clientIDs, clientID)
+			table.insert(clientTimers, Timer())
+
+			print("Server: Client " .. client:getpeername() .. " (" .. clientID .. ") added")
+
 			updateReceived = true
 		end
 
 		for k = 1, #clients do
 			local client = clients[k]
-			local data, error = client:receive()
 
-			if data then
-				print("Server: " .. data .. " that's some great soup!")
-			elseif error == 'closed' then
-				print("Server: Client " .. client:getpeername() .. " removed")
+			if client then
+				local data, error = client:receive()
 
-				table.remove(clients, k)
-				k = k - 1
-			end
+				if data and tonumber(data) then
+					data = client:receive(data)
 
-			if error ~= 'timeout' then
-				updateReceived = true
+					if data then
+						local event, data = unpack(MessagePack.unpack(data))
+
+						if event == "Pong" then
+							clientTimers[k]:restart()
+						elseif event == "ShipUpdate" then
+							for ship in World.getEntities(Ship) do
+								if ship.isLocalPlayer == clientIDs[k] then
+									ship:applyNetworkUpdate(data)
+								end
+							end
+						end
+					end
+				elseif error == 'closed' or clientTimers[k]:getTime() > 15 then
+					print("Server: Client " .. client:getpeername() .. " removed")
+
+					client:close()
+
+					for ship in World.getEntities(Ship) do
+						if ship.isLocalPlayer == clientIDs[k] then
+							ship:remove()
+						end
+					end
+
+					table.remove(clients, k)
+					table.remove(clientIDs, k)
+					table.remove(clientTimers, k)
+
+					k = k - 1
+				end
+
+				if error ~= 'timeout' then
+					updateReceived = true
+				end
 			end
 		end
 
@@ -172,58 +226,84 @@ function World.processNetworkQueue()
 			end
 
 			updateTimer:restart()
+		elseif clientTimer:getTime() > 5 then
+			print("Server: Sending hearbeat")
+
+			clientTimer:restart()
+			World.sendNetworkMessage("Ping")
 		end
 	elseif World.getNetworkState() == NetworkState.Client then
 		local data, error = sock:receive()
 
-		if data then
-			local event, data = unpack(MessagePack.unpack(sock:receive(data)))
+		if data and tonumber(data) then
+			data = sock:receive(data)
 
-			if event == "EntityCreate" then
-				local class_instance, instance, constructor = unpack(data)
+			if data then
+				local event, data = unpack(MessagePack.unpack(data))
 
-				if _G[class_instance] and class.isClass(_G[class_instance]) and _G[class_instance]:extends(SpaceWarEntity) then
-					for k, v in ipairs(constructor) do
-						if type(v) == 'table' then
-							if #v == 2 then
-								constructor[k] = Vector2(unpack(v))
-							elseif #v == 4 then
-								constructor[k] = Color(unpack(v))
+				if event == "ClientID" then
+					clientID = unpack(data)
+				elseif event == "Ping" then
+					clientTimer:restart()
+					World.sendNetworkMessage("Pong")
+				elseif event == "EntityCreate" then
+					local class_instance, instance, constructor = unpack(data)
+
+					if _G[class_instance] and class.isClass(_G[class_instance]) and _G[class_instance]:extends(SpaceWarEntity) then
+						for k, v in ipairs(constructor) do
+							if type(v) == 'table' then
+								if #v == 2 then
+									constructor[k] = Vector2(unpack(v))
+								elseif #v == 4 then
+									constructor[k] = Color(unpack(v))
+								end
 							end
 						end
+
+						local entity = _G[class_instance](unpack(constructor))
+
+						entity.__instance = instance
+
+						World.addEntity(entity)
+
+						print("Client: Creating entity " .. entity.class.name)
+					else
+						print("Client: Attempted to create instance of non-existent entity '" .. class_instance .. "'")
 					end
+				elseif event == "EntityUpdate" then
+					local instance, update = unpack(data)
 
-					local entity = _G[class_instance](unpack(constructor))
-
-					entity.__instance = instance
-
-					World.addEntity(entity)
-
-					print("Client: Creating entity " .. entity.class.name)
-				else
-					print("Client: Attempted to create instance of non-existent entity '" .. class_instance .. "'")
-				end
-			elseif event == "EntityUpdate" then
-				local instance, update = unpack(data)
-
-				for entity in World.getEntities() do
-					if entity.__instance == instance then
-						entity:applyNetworkUpdate(update)
+					for entity in World.getEntities() do
+						if entity.__instance == instance and (not class.isInstance(entity, Ship) or entity.isLocalPlayer ~= World.getClientID()) then
+							entity:applyNetworkUpdate(update)
+						end
 					end
-				end
-			elseif event == "EntityRemove" then
-				local instance = unpack(data)
+				elseif event == "EntityRemove" then
+					local instance = unpack(data)
 
-				for entity in World.getEntities() do
-					if entity.__instance == instance then
-						entity:remove()
-						print("Client: Removing entity " .. entity.class.name)
+					for entity in World.getEntities() do
+						if entity.__instance == instance then
+							entity:remove()
+							print("Client: Removing entity " .. entity.class.name)
+						end
 					end
 				end
 			end
-		elseif error == 'closed' then
+		elseif error == 'closed' or clientTimer:getTime() > 15 then
+			sock:close()
+
 			GUI.pushMenu(ErrorMenu("Connection Lost!"))
 			setGameState(GameState.Menu)
+		end
+
+		if updateTimer:getTime() > 1 / 32 then
+			for ship in World.getEntities(Ship) do
+				if ship.isLocalPlayer == World.getClientID() then
+					World.sendNetworkMessage("ShipUpdate", ship:buildNetworkUpdate())
+				end
+			end
+
+			updateTimer:restart()
 		end
 
 		updateReceived = error ~= 'timeout'
@@ -232,13 +312,29 @@ function World.processNetworkQueue()
 	return updateReceived
 end
 
+function World.getClientID()
+	return clientID
+end
+
 function World.update(delta)
 	while World.getNetworkState() ~= NetworkState.None and World.processNetworkQueue() do end
 
+	local shipCount = 0
+
 	for ship in World.getEntities(Ship) do
-		if ship:isRemoved() and ship.isLocalPlayer == true then
-			World.reset()
+		if World.getNetworkState() == NetworkState.Client then
+			if ship:isRemoved() and ship.isLocalPlayer == true then
+				World.reset()
+			end
 		end
+
+		if not ship:isRemoved() then
+			shipCount = shipCount + 1
+		end
+	end
+
+	if shipCount <= 1 and #clients > 0 then
+		World.reset()
 	end
 
 	World.stepEntities()
@@ -311,8 +407,6 @@ function World.draw()
 end
 
 function World.reset(exit)
-	print(exit and "exiting" or "resetting")
-
 	-- This restarts the really shitty respawn effect
 	timer:restart()
 
@@ -355,7 +449,7 @@ function World.reset(exit)
 			-- 	Ship(
 			-- 		false,
 			-- 		dimensions + ((dimensions - Vector2.One * 24) * Vector2(math.cos(angle), math.sin(angle))),
-			-- 		Color.FromHSV(math.random(0, 360), 1, 1)
+			-- 		Color.fromHSV(math.random(0, 360), 1, 1)
 			-- 	)
 			-- )
 
@@ -363,5 +457,9 @@ function World.reset(exit)
 		end
 
 		World.addEntity(Ship(true, dimensions, Color.White))
+
+		for k, client in ipairs(clients) do
+			World.addEntity(Ship(clientIDs[k], Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
+		end
 	end
 end

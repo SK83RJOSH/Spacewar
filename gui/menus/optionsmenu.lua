@@ -42,7 +42,7 @@ function OptionsMenu:init()
 
 	self:addComponent(TextComponent(Vector2(-1, offset + 165), "Network Options", Assets.fonts.Hyperspace_Bold.normal))
 
-	self:addComponent(InputComponent(Vector2(-1, offset + 195), tostring(Settings.get('network_port')), "Port (Default: 8888)", 5, "0123456789", function(value)
+	self:addComponent(InputComponent(Vector2(-1, offset + 195), tostring(Settings.get('network_port') or ""), "Port (Default: 8888)", 5, "0123456789", function(value)
 		Settings.set('network_port', tonumber(value) or "")
 	end))
 

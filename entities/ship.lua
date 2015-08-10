@@ -103,7 +103,7 @@ end
 
 function Ship:buildNetworkConstructor()
 	return {
-		self.isLocalPlayer ~= 'remote' and 'remote' or true,
+		self.isLocalPlayer == true and 'remote' or self.isLocalPlayer,
 		{self.position:values()},
 		{self.color:values()},
 		self.decoration,
@@ -266,7 +266,7 @@ function Ship:update(delta)
 		end
 	-- DEBUG CODE
 
-	if self.isLocalPlayer and self.isLocalPlayer ~= "remote" then
+	if self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true then
 		self.vkForward = love.keyboard.isDown('w') and 1 or 0
 		self.vkReverse = love.keyboard.isDown('s') and 1 or 0
 		self.vkLeft = love.keyboard.isDown('a') and 1 or 0
@@ -386,6 +386,11 @@ function Ship:draw()
 
 	for k, beam in ipairs(self.photons) do
 		beam:draw()
+	end
+
+	if self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true then
+		love.graphics.setColor(Color.White:values())
+		love.graphics.print('You', self.position.x - 15, self.position.y - 40)
 	end
 
 	if self.power == 1 and self.fade < 255 then

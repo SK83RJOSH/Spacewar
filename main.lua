@@ -84,7 +84,7 @@ function love.mousepressed(x, y, button)
 			World.addEntity(
 				PhotonBeam(
 					Vector2(x, y),
-					Color.FromHSV(math.random(0, 360), 1, 1),
+					Color.fromHSV(math.random(0, 360), 1, 1),
 					Vector2((math.random() * 2) - 1, (math.random() * 2) - 1) * 500
 				)
 			)
@@ -99,7 +99,7 @@ function love.mousepressed(x, y, button)
 				end
 			end
 
-			World.addEntity(Ship(isLocalPlayer, Vector2(x, y), Color.FromHSV(math.random(0, 360), 1, 1)))
+			World.addEntity(Ship(isLocalPlayer, Vector2(x, y), Color.fromHSV(math.random(0, 360), 1, 1)))
 		end
 	end
 end
@@ -124,6 +124,11 @@ function love.keypressed(key, isRepeat)
 	if not isRepeat then
 		if key == 'f11' then
 			love.window.setFullscreen(not love.window.getFullscreen())
+		elseif key == 'f2' then
+			World.sendNetworkMessage('EntityCreate', {
+				'StealthBomber',
+				{}
+			})
 		else
 			if getGameState() == GameState.Game then
 				if key == 'r' or key == 'escape' then
