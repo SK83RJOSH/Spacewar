@@ -104,7 +104,7 @@ end
 
 function GUI.gamepadaxis(joystick, axis, value)
 	if axis == 'leftx' or axis == 'lefty' then
-		delta = Vector2(axis == 'leftx' and value or joystick:getGamepadAxis('leftx'), axis == 'lefty' and value or joystick:getGamepadAxis('lefty'))
+		local delta = Vector2(axis == 'leftx' and value or joystick:getGamepadAxis('leftx'), axis == 'lefty' and value or joystick:getGamepadAxis('lefty'))
 
 		if delta:length() < 0.2 then
 			cursorDelta = Vector2()

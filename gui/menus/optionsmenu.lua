@@ -40,7 +40,13 @@ function OptionsMenu:init()
 		Settings.set('bloom_shader', value)
 	end))
 
-	self:addComponent(ButtonComponent(Vector2(-1, offset + 165), "Back", Assets.fonts.Hyperspace_Bold.large, function()
+	self:addComponent(TextComponent(Vector2(-1, offset + 165), "Network Options", Assets.fonts.Hyperspace_Bold.normal))
+
+	self:addComponent(InputComponent(Vector2(-1, offset + 195), tostring(Settings.get('network_port')), "Port (Default: 8888)", 5, "0123456789", function(value)
+		Settings.set('network_port', tonumber(value) or "")
+	end))
+
+	self:addComponent(ButtonComponent(Vector2(-1, offset + 255), "Back", Assets.fonts.Hyperspace_Bold.large, function()
 		GUI.popMenu()
 	end))
 end

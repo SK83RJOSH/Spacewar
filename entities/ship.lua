@@ -39,7 +39,7 @@ function ReverseThrustersLeft:draw()
 	self.rotation = self.ship.rotation
 	self.position = self.ship.position
 
-	ReverseThrustersLeft.super.draw(self, delta)
+	ReverseThrustersLeft.super.draw(self)
 end
 
 local ReverseThrustersRight = VectorEntity:extend("ReverseThrustersRight")
@@ -60,7 +60,7 @@ function ReverseThrustersRight:draw()
 	self.rotation = self.ship.rotation
 	self.position = self.ship.position
 
-	ReverseThrustersRight.super.draw(self, delta)
+	ReverseThrustersRight.super.draw(self)
 end
 
 Ship = SpaceWarEntity:extend("Ship")
@@ -69,7 +69,7 @@ Ship.PHOTON_BEAM_FIRE_INTERVAL = 0.5
 Ship.MAXIMUM_SHIP_THRUST = 150
 Ship.SHIP_DEBRIS_PIECES = 6
 
-function Ship:init(isLocalPlayer, position, color)
+function Ship:init(isLocalPlayer, position, color, decoration, power, weapon)
 	Ship.super.init(self, 11, true)
 
 	self.isLocalPlayer = isLocalPlayer
@@ -81,9 +81,9 @@ function Ship:init(isLocalPlayer, position, color)
 	self.reverseThrustersLeft = ReverseThrustersLeft(self)
 	self.reverseThrustersRight = ReverseThrustersRight(self)
 	self.fade = 255
-	self.decoration = math.random(0, 4)
-	self.power = math.random(0, 2)
-	self.weapon = math.random(0, 2)
+	self.decoration = decoration or math.random(0, 4)
+	self.power = power or math.random(0, 2)
+	self.weapon = weapon or math.random(0, 2)
 	self.shieldStrength = 0
 
 	self.forwardThrusterActive = false
@@ -99,6 +99,17 @@ function Ship:init(isLocalPlayer, position, color)
 	self.vkFire = 0
 
 	self:buildGeometry()
+end
+
+function Ship:buildNetworkConstructor()
+	return {
+		self.isLocalPlayer ~= 'remote' and 'remote' or true,
+		{self.position:values()},
+		{self.color:values()},
+		self.decoration,
+		self.power,
+		self.weapon
+	}
 end
 
 function Ship:buildGeometry()
@@ -126,6 +137,34 @@ function Ship:buildGeometry()
 		self:addLine(Vector2(-17, 4), Vector2(-10, 7), self.color)
 		self:addLine(Vector2(-11, -10), Vector2(-3, -7), self.color)
 	end
+end
+
+function Ship:buildNetworkUpdate()
+	return {
+		self.position.x,
+		self.position.y,
+		self.velocity.x,
+		self.velocity.y,
+		self.rotation,
+		self.vkLeft,
+		self.vkRight,
+		self.vkForward,
+		self.vkReverse,
+		self.vkFire
+	}
+end
+
+function Ship:applyNetworkUpdate(data)
+	self.position.x,
+	self.position.y,
+	self.velocity.x,
+	self.velocity.y,
+	self.rotation,
+	self.vkLeft,
+	self.vkRight,
+	self.vkForward,
+	self.vkReverse,
+	self.vkFire = unpack(data)
 end
 
 function Ship:update(delta)
@@ -227,7 +266,7 @@ function Ship:update(delta)
 		end
 	-- DEBUG CODE
 
-	if self.isLocalPlayer then
+	if self.isLocalPlayer and self.isLocalPlayer ~= "remote" then
 		self.vkForward = love.keyboard.isDown('w') and 1 or 0
 		self.vkReverse = love.keyboard.isDown('s') and 1 or 0
 		self.vkLeft = love.keyboard.isDown('a') and 1 or 0
@@ -331,17 +370,17 @@ end
 
 function Ship:draw()
 	if self.forwardThrusterActive and math.random(3) > 1 then
-		self.forwardThrusters:draw(delta)
+		self.forwardThrusters:draw()
 	end
 
 	if math.random(3) > 1 then
 		if self.reverseThrusterActive then
-			self.reverseThrustersLeft:draw(delta)
-			self.reverseThrustersRight:draw(delta)
+			self.reverseThrustersLeft:draw()
+			self.reverseThrustersRight:draw()
 		elseif self.vkLeft ~= 0 and self.vkRight == 0 then
-			self.reverseThrustersLeft:draw(delta)
+			self.reverseThrustersLeft:draw()
 		elseif self.vkRight ~= 0 and self.vkLeft == 0 then
-			self.reverseThrustersRight:draw(delta)
+			self.reverseThrustersRight:draw()
 		end
 	end
 
@@ -402,9 +441,11 @@ function Ship:remove()
 			self.thrust:stop()
 		end
 
-		for i = 0, Ship.SHIP_DEBRIS_PIECES do
-			World.addEntity(Explosion(self.position, self.color, self.collisionRadius))
-			World.addEntity(Debris(self.position, self.color))
+		if World.getNetworkState() ~= NetworkState.Client then
+			for i = 0, Ship.SHIP_DEBRIS_PIECES do
+				World.addEntity(Explosion(self.position, self.color, self.collisionRadius))
+				World.addEntity(Debris(self.position, self.color))
+			end
 		end
 	end
 
