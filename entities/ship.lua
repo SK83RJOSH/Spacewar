@@ -180,7 +180,7 @@ function Ship:update(delta)
 		if #self.photons > 0 then
 			self.fade = 255
 		elseif self.fade > 0 then
-			if not self.isLocalPlayer and self.fade == 255 then
+			if (self.isLocalPlayer ~= World.getClientID() or self.isLocalPlayer == false) and self.fade == 255 then
 				SoundManager.play(Assets.sounds.cloak, {
 					channel = 'sfx',
 					pitch = 1 + (-0.4 + (math.random() * 0.8))
@@ -193,7 +193,7 @@ function Ship:update(delta)
 				self.fade = 0
 			end
 
-			if self.isLocalPlayer and self.fade < 50 then
+			if (self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true) and self.fade < 50 then
 				self.fade = 128
 			end
 		end
@@ -389,12 +389,14 @@ function Ship:draw()
 	end
 
 	if self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true then
-		love.graphics.setColor(Color.White:values())
-		love.graphics.print('You', self.position.x - 15, self.position.y - 40)
+		love.graphics.push('all')
+			love.graphics.setColor(Color.White:values())
+			love.graphics.print('You', self.position.x - 15, self.position.y - 40)
+		love.graphics.pop()
 	end
 
 	if self.power == 1 and self.fade < 255 then
-		if self.isLocalPlayer then
+		if self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true then
 			Ship.super.draw(self, Color(self.color.r, self.color.g, self.color.b, self.fade))
 		else
 			MotionBlur.preDraw()
@@ -432,7 +434,7 @@ function Ship:draw()
 		love.graphics.pop()
 	end
 
-	Ship.super.draw(self, color)
+	Ship.super.draw(self)
 end
 
 function Ship:remove()
