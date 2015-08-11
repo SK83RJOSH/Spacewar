@@ -9,19 +9,6 @@ Anyone is free to contribute, and no strict styleguide is enforced. Just try to 
 
 Licensed under GNU General Public License v2.0
 
-# TODO
-
-- [ ] General gameplay logic
-- [ ] Add gameplay statistics
-- [ ] In-game HUD
-- [ ] Remove debug stuff
-
-# Sync TODO
-
-- [x] Client controllable ships to network games
-- [x] Heartbeat events to monitor ping & check for timeouts
-- [ ] Handle varying viewport sizes between client and server
-
 # Possible Features
 
 - DPI Scaling
