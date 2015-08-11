@@ -224,17 +224,21 @@ function World.pumpNetworkQueue()
 					elseif event == "ShipUpdate" then
 						for ship in World.getEntities(Ship) do
 							if ship.isLocalPlayer == client.id then
-								local position, rotation = ship.position, ship.rotation
+								-- local position, velocity, rotation = ship.position:copy(), ship.velocity:copy(), ship.rotation
 
 								ship:applyNetworkUpdate(data)
 
-								if ship.position:distance(position) > 10 then
-									ship.position = position
-								end
-
-								if math.abs(ship.rotation - rotation) > math.pi then
-									ship.rotation = rotation
-								end
+								-- if ship.position:distance(position) > 4 then
+								-- 	ship.position = position
+								-- end
+								--
+								-- if math.abs(ship.velocity:length() - velocity:length()) > Ship.MAXIMUM_SHIP_THRUST / 32 then
+								-- 	ship.velocity = velocity
+								-- end
+								--
+								-- if math.abs(ship.rotation - rotation) > math.pi / 2 / 32 then
+								-- 	ship.rotation = rotation
+								-- end
 							end
 						end
 					end
@@ -320,8 +324,25 @@ function World.pumpNetworkQueue()
 				local instance, update = unpack(data)
 
 				for entity in World.getEntities() do
-					if entity.__instance == instance and (not class.isInstance(entity, Ship) or entity.isLocalPlayer ~= World.getClientID()) then
-						entity:applyNetworkUpdate(update)
+					if entity.__instance == instance then
+						-- if class.isInstance(entity, Ship) and entity.isLocalPlayer == World.getClientID() then
+						-- 	local position, velocity, rotation = entity.position:copy(), entity.velocity:copy(), entity.rotation
+						-- 	local vkLeft, vkRight, vkForward, vkReverse, vkFire = entity.vkLeft, entity.vkRight, entity.vkForward, entity.vkReverse, entity.vkForward, entity.vkFire
+						--
+						-- 	entity:applyNetworkUpdate(update)
+						--
+						-- 	entity.position = math.lerp(entity.position, position, 0.75)
+						-- 	entity.velocity = math.lerp(entity.velocity, velocity, 0.75)
+						-- 	entity.rotation = math.lerp(entity.rotation, rotation, 0.75)
+						--
+						-- 	entity.vkLeft = vkLeft
+						-- 	entity.vkRight = vkRight
+						-- 	entity.vkForward = vkForward
+						-- 	entity.vkReverse = vkReverse
+						-- 	entity.vkReverse = vkReverse
+						-- else
+							entity:applyNetworkUpdate(update)
+						-- end
 					end
 				end
 			elseif event == "EntityRemove" then
