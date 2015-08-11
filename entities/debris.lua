@@ -36,7 +36,8 @@ function Debris:buildNetworkUpdate()
 		self.position.y,
 		self.velocity.x,
 		self.velocity.y,
-		self.rotation
+		self.rotation,
+		love.timer.getTime() - self.creationTime
 	}
 end
 
@@ -45,7 +46,10 @@ function Debris:applyNetworkUpdate(data)
 	self.position.y,
 	self.velocity.x,
 	self.velocity.y,
-	self.rotation = unpack(data)
+	self.rotation,
+	self.creationTime = unpack(data)
+
+	self.creationTime = love.timer.getTime() - self.creationTime
 end
 
 function Debris:update(delta)

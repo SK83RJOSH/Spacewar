@@ -63,10 +63,8 @@ local network_state = NetworkState.None
 local sock = nil
 local clientID = nil
 local clients = {}
-local clientIDs = {}
-local clientTimers = {}
-local clientTimer = Timer()
 local updateTimer = Timer()
+local clientTimer = Timer()
 
 function World.getNetworkState()
 	return network_state
@@ -76,20 +74,18 @@ function World.setNetworkState(new_network_state, params)
 	network_state = NetworkState.None
 
 	if sock then
-		sock:close()
-		sock = nil
-
 		for k, client in ipairs(clients) do
-			client:close()
+			client.sock:close()
 		end
 
-		clientID = nil
-		clients = {}
-		clientIDs = {}
-		clientTimers = {}
-		clientTimer = Timer()
-		updateTimer = Timer()
+		sock:close()
+		sock = nil
 	end
+
+	clientID = nil
+	clients = {}
+	updateTimer:restart()
+	clientTimer:restart()
 
 	if new_network_state ~= NetworkState.None then
 		if not params then
@@ -109,7 +105,10 @@ function World.setNetworkState(new_network_state, params)
 
 		if sock then
 			network_state = new_network_state
+
 			sock:settimeout(0)
+			sock:setoption('keepalive', true)
+			sock:setoption('tcp-nodelay', true)
 		end
 
 		return sock ~= nil, error
@@ -130,7 +129,7 @@ function World.sendNetworkMessage(message, data, targetSock)
 		else
 			if World.getNetworkState() == NetworkState.Host then
 				for k, client in ipairs(clients) do
-					client:send(message)
+					client.sock:send(message)
 				end
 			else
 				sock:send(message)
@@ -139,7 +138,41 @@ function World.sendNetworkMessage(message, data, targetSock)
 	end
 end
 
-function World.processNetworkQueue()
+function World.readNetworkMessage(targetSock)
+	targetSock = targetSock or sock
+
+	if World.getNetworkState() ~= NetworkState.None then
+		local bytes, error = targetSock:receive()
+
+		if tonumber(bytes) then
+			local data, error = targetSock:receive(bytes)
+
+			if data then
+				local success, data = pcall(function()
+					return MessagePack.unpack(data)
+				end)
+
+				if success then
+					return data, nil
+				end
+
+				print("Failed to unpack!")
+
+				return false, nil
+			end
+
+			print("Failed to receive bytes (reported message length was " .. bytes .. " bytes) -- was the message split?")
+
+			return false, error
+		end
+
+		return false, error
+	end
+
+	return false, nil
+end
+
+function World.pumpNetworkQueue()
 	local updateReceived = false
 
 	if World.getNetworkState() == NetworkState.Host then
@@ -149,6 +182,8 @@ function World.processNetworkQueue()
 			local clientID = os.time() .. '_' .. math.random(9999)
 
 			client:settimeout(0)
+			client:setoption('keepalive', true)
+			client:setoption('tcp-nodelay', true)
 
 			World.sendNetworkMessage("ClientID", {clientID}, client)
 
@@ -162,9 +197,12 @@ function World.processNetworkQueue()
 				}, client)
 			end
 
-			table.insert(clients, client)
-			table.insert(clientIDs, clientID)
-			table.insert(clientTimers, Timer())
+			table.insert(clients, {
+				sock = client,
+				id = clientID,
+				timer = Timer(),
+				ping = -1
+			})
 
 			print("Server: Client " .. client:getpeername() .. " (" .. clientID .. ") added")
 
@@ -175,38 +213,43 @@ function World.processNetworkQueue()
 			local client = clients[k]
 
 			if client then
-				local data, error = client:receive()
+				local data, error = World.readNetworkMessage(client.sock)
 
-				if data and tonumber(data) then
-					data = client:receive(data)
+				if data then
+					local event, data = unpack(data)
 
-					if data then
-						local event, data = unpack(MessagePack.unpack(data))
+					if event == "Pong" then
+						client.ping = math.round(client.timer:getTime() * 1000)
+						client.timer:restart()
+					elseif event == "ShipUpdate" then
+						for ship in World.getEntities(Ship) do
+							if ship.isLocalPlayer == client.id then
+								local position, rotation = ship.position, ship.rotation
 
-						if event == "Pong" then
-							clientTimers[k]:restart()
-						elseif event == "ShipUpdate" then
-							for ship in World.getEntities(Ship) do
-								if ship.isLocalPlayer == clientIDs[k] then
-									ship:applyNetworkUpdate(data)
+								ship:applyNetworkUpdate(data)
+
+								if ship.position:distance(position) > 10 then
+									ship.position = position
+								end
+
+								if math.abs(ship.rotation - rotation) > math.pi then
+									ship.rotation = rotation
 								end
 							end
 						end
 					end
-				elseif error == 'closed' or clientTimers[k]:getTime() > 15 then
-					print("Server: Client " .. client:getpeername() .. " removed")
+				elseif error == 'closed' or client.timer:getTime() > 10 then
+					print("Server: Client " .. client.sock:getpeername() .. " (" .. client.id .. ") removed (" .. (error == 'closed' and 'Connection closed' or 'Timeout') .. ")")
 
-					client:close()
+					client.sock:close()
 
 					for ship in World.getEntities(Ship) do
-						if ship.isLocalPlayer == clientIDs[k] then
+						if ship.isLocalPlayer == client.id then
 							ship:remove()
 						end
 					end
 
 					table.remove(clients, k)
-					table.remove(clientIDs, k)
-					table.remove(clientTimers, k)
 
 					k = k - 1
 				end
@@ -226,74 +269,74 @@ function World.processNetworkQueue()
 			end
 
 			updateTimer:restart()
-		elseif clientTimer:getTime() > 5 then
-			print("Server: Sending hearbeat")
+		end
 
-			clientTimer:restart()
+		if clientTimer:getTime() > 5 then
+			for k, client in ipairs(clients) do
+				if client.timer:getTime() < 5 then
+					client.timer:restart()
+				end
+			end
+
 			World.sendNetworkMessage("Ping")
+			clientTimer:restart()
 		end
 	elseif World.getNetworkState() == NetworkState.Client then
-		local data, error = sock:receive()
+		local data, error = World.readNetworkMessage()
 
-		if data and tonumber(data) then
-			data = sock:receive(data)
+		if data then
+			local event, data = unpack(data)
 
-			if data then
-				local event, data = unpack(MessagePack.unpack(data))
+			if event == "Ping" then
+				World.sendNetworkMessage("Pong")
+				clientTimer:restart()
+			elseif event == "ClientID" then
+				clientID = unpack(data)
+			elseif event == "EntityCreate" then
+				local class_instance, instance, constructor = unpack(data)
 
-				if event == "ClientID" then
-					clientID = unpack(data)
-				elseif event == "Ping" then
-					clientTimer:restart()
-					World.sendNetworkMessage("Pong")
-				elseif event == "EntityCreate" then
-					local class_instance, instance, constructor = unpack(data)
-
-					if _G[class_instance] and class.isClass(_G[class_instance]) and _G[class_instance]:extends(SpaceWarEntity) then
-						for k, v in ipairs(constructor) do
-							if type(v) == 'table' then
-								if #v == 2 then
-									constructor[k] = Vector2(unpack(v))
-								elseif #v == 4 then
-									constructor[k] = Color(unpack(v))
-								end
+				if _G[class_instance] and class.isClass(_G[class_instance]) and _G[class_instance]:extends(SpaceWarEntity) then
+					for k, v in ipairs(constructor) do
+						if type(v) == 'table' then
+							if #v == 2 then
+								constructor[k] = Vector2(unpack(v))
+							elseif #v == 4 then
+								constructor[k] = Color(unpack(v))
 							end
 						end
-
-						local entity = _G[class_instance](unpack(constructor))
-
-						entity.__instance = instance
-
-						World.addEntity(entity)
-
-						print("Client: Creating entity " .. entity.class.name)
-					else
-						print("Client: Attempted to create instance of non-existent entity '" .. class_instance .. "'")
 					end
-				elseif event == "EntityUpdate" then
-					local instance, update = unpack(data)
 
-					for entity in World.getEntities() do
-						if entity.__instance == instance and (not class.isInstance(entity, Ship) or entity.isLocalPlayer ~= World.getClientID()) then
-							entity:applyNetworkUpdate(update)
-						end
+					local entity = _G[class_instance](unpack(constructor))
+
+					entity.__instance = instance
+
+					World.addEntity(entity)
+
+					print("Client: Creating entity " .. entity.class.name)
+				else
+					print("Client: Attempted to create instance of non-existent entity '" .. class_instance .. "'")
+				end
+			elseif event == "EntityUpdate" then
+				local instance, update = unpack(data)
+
+				for entity in World.getEntities() do
+					if entity.__instance == instance and (not class.isInstance(entity, Ship) or entity.isLocalPlayer ~= World.getClientID()) then
+						entity:applyNetworkUpdate(update)
 					end
-				elseif event == "EntityRemove" then
-					local instance = unpack(data)
+				end
+			elseif event == "EntityRemove" then
+				local instance = unpack(data)
 
-					for entity in World.getEntities() do
-						if entity.__instance == instance then
-							entity:remove()
-							print("Client: Removing entity " .. entity.class.name)
-						end
+				for entity in World.getEntities() do
+					if entity.__instance == instance then
+						entity:remove()
+						print("Client: Removing entity " .. entity.class.name)
 					end
 				end
 			end
-		elseif error == 'closed' or clientTimer:getTime() > 15 then
-			sock:close()
-
-			GUI.pushMenu(ErrorMenu("Connection Lost!"))
+		elseif error == 'closed' or clientTimer:getTime() > 10 then
 			setGameState(GameState.Menu)
+			GUI.pushMenu(ErrorMenu(error == 'closed' and "Connection Closed!" or "Connection Timeout!"))
 		end
 
 		if updateTimer:getTime() > 1 / 32 then
@@ -309,7 +352,9 @@ function World.processNetworkQueue()
 		updateReceived = error ~= 'timeout'
 	end
 
-	return updateReceived
+	if updateReceived then
+		World.pumpNetworkQueue()
+	end
 end
 
 function World.getClientID()
@@ -317,7 +362,9 @@ function World.getClientID()
 end
 
 function World.update(delta)
-	while World.getNetworkState() ~= NetworkState.None and World.processNetworkQueue() do end
+	if World.getNetworkState() ~= NetworkState.None then
+		World.pumpNetworkQueue()
+	end
 
 	local shipCount = 0
 
@@ -399,7 +446,7 @@ function World.draw()
 				love.graphics.print(("Network Stats: %i in %i out"):format(sock:getstats()), 10, 80)
 			else
 				for k, client in ipairs(clients) do
-					love.graphics.print((client:getpeername() .. " Stats: %i in %i out"):format(client:getstats()), 10, 40 + (20 * k))
+					love.graphics.print((client.sock:getpeername() .. " Stats: %i in %i out " .. client.ping .. "ms Ping"):format(client.sock:getstats()), 10, 40 + (20 * k))
 				end
 			end
 		end
@@ -459,7 +506,7 @@ function World.reset(exit)
 		World.addEntity(Ship(true, dimensions, Color.White))
 
 		for k, client in ipairs(clients) do
-			World.addEntity(Ship(clientIDs[k], Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
+			World.addEntity(Ship(client.id, Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
 		end
 	end
 end

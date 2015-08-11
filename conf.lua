@@ -3,6 +3,7 @@ io.stdout:setvbuf('no')
 function love.conf(config)
 	config.identity = 'Spacewar'
 	config.version = '0.9.2'
+	config.console = false
 
 	config.window.title = 'Spacewar!'
 	config.window.icon = 'assets/images/icon.png' -- Due to a (possible) SDL bug this does not affect traybar icon
