@@ -145,7 +145,7 @@ function World.readNetworkMessage(targetSock)
 		local bytes, error = targetSock:receive()
 
 		if tonumber(bytes) then
-			local data, error = targetSock:receive(bytes)
+			local data, error, partial = targetSock:receive(bytes)
 
 			if data then
 				local success, data = pcall(function()
@@ -161,7 +161,11 @@ function World.readNetworkMessage(targetSock)
 				return false, nil
 			end
 
-			print("Failed to receive bytes (reported message length was " .. bytes .. " bytes) -- was the message split?")
+			print("Failed to receive bytes (reported message length was " .. bytes .. " bytes; read " .. #partial .. " bytes)")
+
+			if #partial > 0 then
+				print("Partial was: " .. partial)
+			end
 
 			return false, error
 		end
@@ -341,7 +345,9 @@ function World.pumpNetworkQueue()
 						-- 	entity.vkReverse = vkReverse
 						-- 	entity.vkReverse = vkReverse
 						-- else
+						if not class.isInstance(entity, Ship) or entity.isLocalPlayer ~= World.getClientID() then
 							entity:applyNetworkUpdate(update)
+						end
 						-- end
 					end
 				end
