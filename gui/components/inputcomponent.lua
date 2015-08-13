@@ -24,7 +24,7 @@ function InputComponent:textinput(text)
 end
 
 function InputComponent:keypressed(key, isRepeat)
-	if key == 'backspace' and #self.text > 0 then
+	if key == 'backspace' and #self.text > 0 and self.active then
 		self.text = self.text:sub(0, #self.text - 1)
 
 		if self.callback then
