@@ -328,6 +328,6 @@ function World.reset(exit)
 	end
 
 	if Network.getState() ~= NetworkState.Client then
-		World.addEntity(Ship(Network.getID(), Vector2(love.graphics.getDimensions()) / 2, Color.White))
+		World.addEntity(Ship(Network.getID(), Vector2(love.graphics.getDimensions()) / 2, Color.White:copy()))
 	end
 end

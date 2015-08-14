@@ -415,15 +415,13 @@ function Ship:draw()
 	love.graphics.pop()
 
 	if self.power == 1 and self.fade < 255 then
-		love.graphics.push('all')
-			if self:isLocalPlayer() then
+		if self:isLocalPlayer() then
+			Ship.super.draw(self, Color(self.color.r, self.color.g, self.color.b, self.fade))
+		else
+			MotionBlur.preDraw()
 				Ship.super.draw(self, Color(self.color.r, self.color.g, self.color.b, self.fade))
-			else
-				MotionBlur.preDraw()
-					Ship.super.draw(self, Color(self.color.r, self.color.g, self.color.b, self.fade))
-				MotionBlur.postDraw()
-			end
-		love.graphics.pop()
+			MotionBlur.postDraw()
+		end
 
 		return
 	elseif self.power == 2 then
