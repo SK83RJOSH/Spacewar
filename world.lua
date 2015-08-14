@@ -170,7 +170,7 @@ function World.update(delta)
 		end
 	end
 
-	if shipCount <= 1 and Network.getPeerCount() > 1 then
+	if shipCount <= 1 and Network.getPeerCount() >= 1 then
 		World.reset()
 	end
 
