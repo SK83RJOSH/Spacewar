@@ -87,6 +87,8 @@ function World.update(delta)
 		for event in Network.getEvents() do
 			if event.type == "connect" then
 				if Network.getState() == NetworkState.Server then
+					print("Server: Adding client (" .. event.peer:connect_id() .. ")")
+
 					for entity in World.getEntities(entity) do
 						Network.send("EntityCreate", {
 							entity.class.name,
@@ -112,6 +114,8 @@ function World.update(delta)
 
 					GUI.pushMenu(ErrorMenu("Connection Closed!"))
 					setGameState(GameState.Menu)
+				else
+					print("Server: Server removing client (" .. event.peer:connect_id() .. ")")
 				end
 			elseif event.type == "receive" then
 				local peer = event.peer
@@ -250,6 +254,25 @@ function World.draw()
 		for entity in World.getEntities() do
 			entity:draw()
 		end
+
+		love.graphics.push('all')
+			love.graphics.translate(love.mouse.getPosition())
+			love.graphics.setColor(Color.White:values())
+
+			love.graphics.setLineWidth(1)
+			love.graphics.setLineStyle('smooth')
+
+			love.graphics.circle('line', 0, 0, 5, 16)
+
+			love.graphics.setLineWidth(2)
+			love.graphics.setLineStyle('rough')
+
+			love.graphics.line(-11, 0, -5, 0)
+			love.graphics.line(11, 0, 5, 0)
+
+			love.graphics.line(0, -11, 0, -5)
+			love.graphics.line(0, 11, 0, 5)
+		love.graphics.pop()
 
 		local time = timer:getTime() * 3
 
