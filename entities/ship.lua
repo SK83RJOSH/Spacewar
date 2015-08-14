@@ -69,10 +69,10 @@ Ship.PHOTON_BEAM_FIRE_INTERVAL = 0.5
 Ship.MAXIMUM_SHIP_THRUST = 150
 Ship.SHIP_DEBRIS_PIECES = 6
 
-function Ship:init(isLocalPlayer, position, color, decoration, power, weapon)
+function Ship:init(peerID, position, color, decoration, power, weapon)
 	Ship.super.init(self, 11, true)
 
-	self.isLocalPlayer = isLocalPlayer
+	self.peerID = peerID
 	self.position = position
 	self.color = color
 
@@ -101,9 +101,21 @@ function Ship:init(isLocalPlayer, position, color, decoration, power, weapon)
 	self:buildGeometry()
 end
 
+function Ship:isAI()
+	return self.peerID == -1
+end
+
+function Ship:isPlayer()
+	return not self:isAI()
+end
+
+function Ship:isLocalPlayer()
+	return Network.getID() == self.peerID
+end
+
 function Ship:buildNetworkConstructor()
 	return {
-		self.isLocalPlayer == true and 'remote' or self.isLocalPlayer,
+		self.peerID,
 		{self.position:values()},
 		{self.color:values()},
 		self.decoration,
@@ -180,7 +192,7 @@ function Ship:update(delta)
 		if #self.photons > 0 then
 			self.fade = 255
 		elseif self.fade > 0 then
-			if (self.isLocalPlayer ~= Network.getID() or self.isLocalPlayer == false) and self.fade == 255 then
+			if self:isLocalPlayer() and self.fade == 255 then
 				SoundManager.play(Assets.sounds.cloak, {
 					channel = 'sfx',
 					pitch = 1 + (-0.4 + (math.random() * 0.8))
@@ -193,7 +205,7 @@ function Ship:update(delta)
 				self.fade = 0
 			end
 
-			if (self.isLocalPlayer == Network.getID() or self.isLocalPlayer == true) and self.fade < 50 then
+			if self:isLocalPlayer() and self.fade < 50 then
 				self.fade = 128
 			end
 		end
@@ -204,7 +216,7 @@ function Ship:update(delta)
 	end
 
 	-- DEBUG CODE
-		if not self.isLocalPlayer then
+		if self:isAI() then
 			local minDistance = 0
 			local targetShip = false
 
@@ -266,7 +278,7 @@ function Ship:update(delta)
 		end
 	-- DEBUG CODE
 
-	if self.isLocalPlayer == Network.getID() or self.isLocalPlayer == true then
+	if self:isLocalPlayer() then
 		self.vkForward = love.keyboard.isDown('w') and 1 or 0
 		self.vkReverse = love.keyboard.isDown('s') and 1 or 0
 		self.vkLeft = love.keyboard.isDown('a') and 1 or 0
@@ -393,15 +405,17 @@ function Ship:draw()
 
 		local username = "John Cena"
 
-		if self.isLocalPlayer == Network.getID() or self.isLocalPlayer == true then
+		if self:isLocalPlayer() then
 			username = "You"
+		elseif self:isAI() then
+			username = "Bot"
 		end
 
 		love.graphics.print(username, self.position.x - (love.graphics.getFont():getWidth(username) / 2), self.position.y - 40)
 	love.graphics.pop()
 
 	if self.power == 1 and self.fade < 255 then
-		if self.isLocalPlayer == Network.getID() or self.isLocalPlayer == true then
+		if self:isLocalPlayer() then
 			Ship.super.draw(self, Color(self.color.r, self.color.g, self.color.b, self.fade))
 		else
 			MotionBlur.preDraw()

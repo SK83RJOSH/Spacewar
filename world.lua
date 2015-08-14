@@ -72,7 +72,7 @@ function World.update(delta)
 				end
 			else
 				for ship in World.getEntities(Ship) do
-					if ship.isLocalPlayer == Network.getID() then
+					if ship:isLocalPlayer() then
 						Network.send("EntityUpdate", {
 							ship.__instance,
 							ship:buildNetworkUpdate()
@@ -113,7 +113,11 @@ function World.update(delta)
 
 					if _G[class_instance] and class.isClass(_G[class_instance]) and _G[class_instance]:extends(SpaceWarEntity) then
 						for k, v in ipairs(constructor) do
+							print(type(v))
+
 							if type(v) == 'table' then
+								print(#v)
+
 								if #v == 2 then
 									constructor[k] = Vector2(unpack(v))
 								elseif #v == 4 then
@@ -137,7 +141,7 @@ function World.update(delta)
 
 					for entity in World.getEntities() do
 						if entity.__instance == instance then
-							if not class.isInstance(entity, Ship) or entity.isLocalPlayer ~= Network.getID() then
+							if not class.isInstance(entity, Ship) or not entity:isLocalPlayer() then
 								entity:applyNetworkUpdate(update)
 							end
 						end
@@ -162,7 +166,7 @@ function World.update(delta)
 
 	for ship in World.getEntities(Ship) do
 		if Network.getState() == NetworkState.Client then
-			if ship:isRemoved() and ship.isLocalPlayer == true then
+			if ship:isRemoved() and ship:isLocalPlayer() then
 				World.reset()
 			end
 		end
@@ -206,7 +210,7 @@ function World.update(delta)
 		end
 
 		if Network.getState() == NetworkState.Server then
-			if ship.isLocalPlayer and ship.isLocalPlayer ~= true and not Network.getPeerByID(ship.isLocalPlayer) then
+			if not ship:isLocalPlayer() and not ship:isAI() and not Network.getPeerByID(ship.peerID) then
 				ship:remove()
 			end
 		end
@@ -291,6 +295,6 @@ function World.reset(exit)
 	end
 
 	if Network.getState() ~= NetworkState.Client then
-		World.addEntity(Ship(true, Vector2(love.graphics.getDimensions()) / 2, Color.White))
+		World.addEntity(Ship(Network.getID(), Vector2(love.graphics.getDimensions()) / 2, Color.White))
 	end
 end

@@ -80,26 +80,28 @@ function love.mousepressed(x, y, button)
 	if getGameState() == GameState.Menu then
 		GUI.mousepressed(x, y, button)
 	elseif getGameState() == GameState.Game then
-		if button == 'l' then
-			World.addEntity(
-				PhotonBeam(
-					Vector2(x, y),
-					Color.fromHSV(math.random(0, 360), 1, 1),
-					Vector2((math.random() * 2) - 1, (math.random() * 2) - 1) * 500
+		if Network.getState() ~= NetworkState.Client then
+			if button == 'l' then
+				World.addEntity(
+					PhotonBeam(
+						Vector2(x, y),
+						Color.fromHSV(math.random(0, 360), 1, 1),
+						Vector2((math.random() * 2) - 1, (math.random() * 2) - 1) * 500
+					)
 				)
-			)
-		elseif button == 'm' then
-			World.addEntity(Sun(Vector2(x, y)))
-		elseif button == 'r' then
-			local isLocalPlayer = true
+			elseif button == 'm' then
+				World.addEntity(Sun(Vector2(x, y)))
+			elseif button == 'r' then
+				local peerID = Network.getID()
 
-			for ship in World.getEntities(Ship) do
-				if ship.isLocalPlayer then
-					isLocalPlayer = false
+				for ship in World.getEntities(Ship) do
+					if ship:isLocalPlayer() then
+						peerID = -1
+					end
 				end
-			end
 
-			World.addEntity(Ship(isLocalPlayer, Vector2(x, y), Color.fromHSV(math.random(0, 360), 1, 1)))
+				World.addEntity(Ship(peerID, Vector2(x, y), Color.fromHSV(math.random(0, 360), 1, 1)))
+			end
 		end
 	end
 end
@@ -124,11 +126,6 @@ function love.keypressed(key, isRepeat)
 	if not isRepeat then
 		if key == 'f11' then
 			love.window.setFullscreen(not love.window.getFullscreen())
-		elseif key == 'f2' then
-			World.sendNetworkMessage('EntityCreate', {
-				'StealthBomber',
-				{}
-			})
 		else
 			if getGameState() == GameState.Game then
 				if key == 'r' or key == 'escape' then

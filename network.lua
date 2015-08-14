@@ -30,7 +30,7 @@ function Network.getID()
 		return server:connect_id()
 	end
 
-	return nil
+	return 0
 end
 
 function Network.host(port)
