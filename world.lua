@@ -88,14 +88,23 @@ function World.update(delta)
 			if event.type == "connect" then
 				if Network.getState() == NetworkState.Server then
 					for entity in World.getEntities(entity) do
-						Network.broadcast("EntityCreate", {
+						Network.send("EntityCreate", {
 							entity.class.name,
 							entity.__instance,
 							entity:buildNetworkConstructor()
-						})
+						}, event.peer)
+					end
+
+					for id, username in Network.getUsernames() do
+						Network.send("SetUsername", {
+							id,
+							username
+						}, event.peer)
 					end
 
 					World.addEntity(Ship(event.peer:connect_id(), Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
+				else
+					Network.send("SetUsername", Settings.get('network_username') or Network.DefaultUsername)
 				end
 			elseif event.type == "disconnect" then
 				if Network.getState() == NetworkState.Client then
@@ -108,56 +117,75 @@ function World.update(delta)
 				local peer = event.peer
 				local event, data = unpack(MessagePack.unpack(event.data))
 
-				if event == "EntityCreate" then
-					local class_instance, instance, constructor = unpack(data)
+				if Network.getState() == NetworkState.Server then
+					if event == "SetUsername" then
+						Network.setUsername(peer:connect_id(), data)
+					elseif event == "EntityUpdate" then
+						local instance, update = unpack(data)
 
-					if _G[class_instance] and class.isClass(_G[class_instance]) and _G[class_instance]:extends(SpaceWarEntity) then
-						for k, v in ipairs(constructor) do
-							print(type(v))
-
-							if type(v) == 'table' then
-								print(#v)
-
-								if #v == 2 then
-									constructor[k] = Vector2(unpack(v))
-								elseif #v == 4 then
-									constructor[k] = Color(unpack(v))
+						for entity in World.getEntities() do
+							if entity.__instance == instance then
+								if not class.isInstance(entity, Ship) or entity.peerID == peer:connect_id() then
+									entity:applyNetworkUpdate(update)
 								end
 							end
 						end
-
-						local entity = _G[class_instance](unpack(constructor))
-
-						entity.__instance = instance
-
-						World.addEntity(entity)
-
-						print("Client: Creating entity " .. entity.class.name)
-					else
-						print("Client: Attempted to create instance of non-existent entity '" .. class_instance .. "'")
 					end
-				elseif event == "EntityUpdate" then
-					local instance, update = unpack(data)
+				else
+					if event == "SetUsername" then
+						Network.setUsername(unpack(data))
+					elseif event == "EntityCreate" then
+						local class_instance, instance, constructor = unpack(data)
 
-					for entity in World.getEntities() do
-						if entity.__instance == instance then
-							if not class.isInstance(entity, Ship) or not entity:isLocalPlayer() then
-								entity:applyNetworkUpdate(update)
+						if _G[class_instance] and class.isClass(_G[class_instance]) and _G[class_instance]:extends(SpaceWarEntity) then
+							for k, v in ipairs(constructor) do
+								print(type(v))
+
+								if type(v) == 'table' then
+									print(#v)
+
+									if #v == 2 then
+										constructor[k] = Vector2(unpack(v))
+									elseif #v == 4 then
+										constructor[k] = Color(unpack(v))
+									end
+								end
+							end
+
+							local entity = _G[class_instance](unpack(constructor))
+
+							entity.__instance = instance
+
+							World.addEntity(entity)
+
+							print("Client: Creating entity " .. entity.class.name)
+						else
+							print("Client: Attempted to create instance of non-existent entity '" .. class_instance .. "'")
+						end
+					elseif event == "EntityUpdate" then
+						local instance, update = unpack(data)
+
+						for entity in World.getEntities() do
+							if entity.__instance == instance then
+								if not class.isInstance(entity, Ship) or not entity:isLocalPlayer() then
+									entity:applyNetworkUpdate(update)
+								end
 							end
 						end
-					end
-				elseif event == "EntityRemove" then
-					local instance = unpack(data)
+					elseif event == "EntityRemove" then
+						local instance = unpack(data)
 
-					for entity in World.getEntities() do
-						if entity.__instance == instance then
-							entity:remove()
-							print("Client: Removing entity " .. entity.class.name)
+						for entity in World.getEntities() do
+							if entity.__instance == instance then
+								entity:remove()
+								print("Client: Removing entity " .. entity.class.name)
+							end
 						end
+					elseif event == "Reset" then
+						World.reset()
 					end
-				elseif event == "Reset" then
-					World.reset()
 				end
+
 			end
 		end
 	end
@@ -246,7 +274,14 @@ function World.draw()
 		end
 
 		love.graphics.setColor(Color.White:values())
-		love.graphics.print("Network State: " .. (table.find(NetworkState, Network.getState()) or "Unknown"), 10, 40)
+		love.graphics.print(("Network State: %s"):format(table.find(NetworkState, Network.getState()) or "Unknown"), 10, 40)
+
+		local offset = 60
+
+		for peer in Network.getPeers() do
+			love.graphics.print(("Peer #%i: %ims"):format(peer:connect_id(), peer:last_round_trip_time()), 10, offset)
+			offset = offset + 20
+		end
 	love.graphics.pop()
 end
 
@@ -288,9 +323,7 @@ function World.reset(exit)
 		Network.broadcast("Reset")
 
 		for peer in Network.getPeers() do
-			if peer:state() == "connected" then
-				World.addEntity(Ship(peer:connect_id(), Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
-			end
+			World.addEntity(Ship(peer:connect_id(), Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
 		end
 	end
 

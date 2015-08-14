@@ -8,9 +8,11 @@ function MainMenu:init()
 	end))
 
 	self:addComponent(ButtonComponent(Vector2(-1, 250), "Host Game", Assets.fonts.Hyperspace_Bold.large, function()
-		Network.host(Settings.get('network_port'))
-
-		setGameState(GameState.Game)
+		if Network.host(Settings.get('network_port')) then
+			setGameState(GameState.Game)
+		else
+			GUI.pushMenu(ErrorMenu("Unable to create game!"))
+		end
 	end))
 
 	self:addComponent(ButtonComponent(Vector2(-1, 300), "Join Game", Assets.fonts.Hyperspace_Bold.large, function()

@@ -403,7 +403,7 @@ function Ship:draw()
 	love.graphics.push('all')
 		love.graphics.setColor(Color.White:values())
 
-		local username = "John Cena"
+		local username = Network.getUsername(self.peerID)
 
 		if self:isLocalPlayer() then
 			username = "You"

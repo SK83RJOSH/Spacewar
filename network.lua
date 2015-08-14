@@ -12,6 +12,7 @@ NetworkState = {
 }
 
 local host, server, state = nil, nil, NetworkState.None
+local usernames = {}
 
 function Network.getState()
 	return state
@@ -33,12 +34,40 @@ function Network.getID()
 	return 0
 end
 
+function Network.setUsername(id, username)
+	if Network.getState() ~= NetworkState.None then
+		usernames[id] = username
+
+		if Network.getState() == NetworkState.Server then
+			Network.broadcast("SetUsername", {
+				id,
+				username
+			})
+		end
+	end
+end
+
+function Network.getUsername(id)
+	return usernames[id] or Network.DefaultUsername
+end
+
+function Network.getUsernames()
+	return pairs(usernames)
+end
+
 function Network.host(port)
 	if Network.getState() == NetworkState.None then
 		host = enet.host_create('*:' .. (port or Network.DefaultPort))
 
-		state = NetworkState.Server
+		if host then
+			state = NetworkState.Server
+			Network.setUsername(Network.getID(), Settings.get('network_username'))
+		end
+
+		return host ~= nil
 	end
+
+	return false
 end
 
 function Network.connect(address, port)
@@ -140,6 +169,7 @@ function Network.close()
 
 		host = nil
 		server = nil
+		usernames = {}
 
 		state = NetworkState.None
 	end
