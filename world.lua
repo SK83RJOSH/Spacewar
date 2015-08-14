@@ -260,18 +260,13 @@ function World.draw()
 			love.graphics.setColor(Color.White:values())
 
 			love.graphics.setLineWidth(1)
-			love.graphics.setLineStyle('smooth')
-
-			love.graphics.circle('line', 0, 0, 5, 16)
-
-			love.graphics.setLineWidth(2)
 			love.graphics.setLineStyle('rough')
 
-			love.graphics.line(-11, 0, -5, 0)
-			love.graphics.line(11, 0, 5, 0)
-
-			love.graphics.line(0, -11, 0, -5)
-			love.graphics.line(0, 11, 0, 5)
+			love.graphics.circle('line', 0, 0, 6, 12)
+			love.graphics.line(-12, 0, -6, 0)
+			love.graphics.line(12, 0, 6, 0)
+			love.graphics.line(0, -12, 0, -6)
+			love.graphics.line(0, 12, 0, 6)
 		love.graphics.pop()
 
 		local time = timer:getTime() * 3
