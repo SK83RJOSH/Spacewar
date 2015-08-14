@@ -17,8 +17,8 @@ require('utils/shaders/starfield')
 
 require('gui/gui')
 
-require('socket')
 require('assetloader')
+require('network')
 require('settings')
 require('soundmanager')
 require('world')
@@ -208,4 +208,8 @@ function love.draw()
 	local string = ("FPS: %i, RAM: %.2fMB, VRAM: %.2fMB, Drawcalls: %i"):format(fps, ram, vram, drawcalls)
 
 	love.graphics.print(string, 10, 10)
+end
+
+function love.quit()
+	Network.close()
 end

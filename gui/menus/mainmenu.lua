@@ -8,15 +8,9 @@ function MainMenu:init()
 	end))
 
 	self:addComponent(ButtonComponent(Vector2(-1, 250), "Host Game", Assets.fonts.Hyperspace_Bold.large, function()
-		local status, error = World.setNetworkState(NetworkState.Host, {
-			port = tonumber(Settings.get('network_port'))
-		})
+		Network.host(Settings.get('network_port'))
 
-		if status then
-			setGameState(GameState.Game)
-		else
-			GUI.pushMenu(ErrorMenu(error))
-		end
+		setGameState(GameState.Game)
 	end))
 
 	self:addComponent(ButtonComponent(Vector2(-1, 300), "Join Game", Assets.fonts.Hyperspace_Bold.large, function()

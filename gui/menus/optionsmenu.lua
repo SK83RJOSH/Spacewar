@@ -42,11 +42,15 @@ function OptionsMenu:init()
 
 	self:addComponent(TextComponent(Vector2(-1, offset + 165), "Network Options", Assets.fonts.Hyperspace_Bold.normal))
 
-	self:addComponent(InputComponent(Vector2(-1, offset + 195), tostring(Settings.get('network_port') or ""), "Port (Default: 8888)", 5, "0123456789", function(value)
+	self:addComponent(InputComponent(Vector2(-1, offset + 195), Settings.get('network_username') or "", "Username (Default: " .. Network.DefaultUsername .. ")", 16, nil, function(value)
+		Settings.set('network_username', #value > 0 and value or nil)
+	end))
+
+	self:addComponent(InputComponent(Vector2(-1, offset + 225), tostring(Settings.get('network_port') or ""), "Port (Default: " .. Network.DefaultPort .. ")", 5, "0123456789", function(value)
 		Settings.set('network_port', tonumber(value) or "")
 	end))
 
-	self:addComponent(ButtonComponent(Vector2(-1, offset + 255), "Back", Assets.fonts.Hyperspace_Bold.large, function()
+	self:addComponent(ButtonComponent(Vector2(-1, offset + 275), "Back", Assets.fonts.Hyperspace_Bold.large, function()
 		GUI.popMenu()
 	end))
 end

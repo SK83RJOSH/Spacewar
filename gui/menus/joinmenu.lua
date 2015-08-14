@@ -16,18 +16,13 @@ function JoinMenu:init()
 
 		local host, port = input.text:split(":")
 
-		local status, error = World.setNetworkState(NetworkState.Client, {
-			address = host,
-			port = tonumber(port)
-		})
-
-		if not status then
-			label:setText(error, true)
-		else
-			GUI.popMenu()
-
+		if pcall(function()
+			Network.connect(host, port)
+		end) then
 			Settings.set('last_address', input.text)
 			setGameState(GameState.Game)
+		else
+			label:setText("Invalid host!", true)
 		end
 	end))
 

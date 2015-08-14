@@ -180,7 +180,7 @@ function Ship:update(delta)
 		if #self.photons > 0 then
 			self.fade = 255
 		elseif self.fade > 0 then
-			if (self.isLocalPlayer ~= World.getClientID() or self.isLocalPlayer == false) and self.fade == 255 then
+			if (self.isLocalPlayer ~= Network.getID() or self.isLocalPlayer == false) and self.fade == 255 then
 				SoundManager.play(Assets.sounds.cloak, {
 					channel = 'sfx',
 					pitch = 1 + (-0.4 + (math.random() * 0.8))
@@ -193,7 +193,7 @@ function Ship:update(delta)
 				self.fade = 0
 			end
 
-			if (self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true) and self.fade < 50 then
+			if (self.isLocalPlayer == Network.getID() or self.isLocalPlayer == true) and self.fade < 50 then
 				self.fade = 128
 			end
 		end
@@ -266,7 +266,7 @@ function Ship:update(delta)
 		end
 	-- DEBUG CODE
 
-	if self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true then
+	if self.isLocalPlayer == Network.getID() or self.isLocalPlayer == true then
 		self.vkForward = love.keyboard.isDown('w') and 1 or 0
 		self.vkReverse = love.keyboard.isDown('s') and 1 or 0
 		self.vkLeft = love.keyboard.isDown('a') and 1 or 0
@@ -388,15 +388,20 @@ function Ship:draw()
 		beam:draw()
 	end
 
-	if self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true then
-		love.graphics.push('all')
-			love.graphics.setColor(Color.White:values())
-			love.graphics.print('You', self.position.x - 15, self.position.y - 40)
-		love.graphics.pop()
-	end
+	love.graphics.push('all')
+		love.graphics.setColor(Color.White:values())
+
+		local username = "John Cena"
+
+		if self.isLocalPlayer == Network.getID() or self.isLocalPlayer == true then
+			username = "You"
+		end
+
+		love.graphics.print(username, self.position.x - (love.graphics.getFont():getWidth(username) / 2), self.position.y - 40)
+	love.graphics.pop()
 
 	if self.power == 1 and self.fade < 255 then
-		if self.isLocalPlayer == World.getClientID() or self.isLocalPlayer == true then
+		if self.isLocalPlayer == Network.getID() or self.isLocalPlayer == true then
 			Ship.super.draw(self, Color(self.color.r, self.color.g, self.color.b, self.fade))
 		else
 			MotionBlur.preDraw()
@@ -448,7 +453,7 @@ function Ship:remove()
 			self.thrust:stop()
 		end
 
-		if World.getNetworkState() ~= NetworkState.Client then
+		if Network.getState() ~= NetworkState.Client then
 			for i = 0, Ship.SHIP_DEBRIS_PIECES do
 				World.addEntity(Explosion(self.position, self.color, self.collisionRadius))
 				World.addEntity(Debris(self.position, self.color))

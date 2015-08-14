@@ -1,56 +1,146 @@
+require('enet')
+
 Network = {}
 
-local threads = {}
+Network.DefaultUsername = "John Cena"
+Network.DefaultPort = 8888
 
-function Network.update()
-	local k = 1
+NetworkState = {
+	None = 0,
+	Client = 1,
+	Server = 2
+}
 
-	while k <= #threads and threads[k] do
-		if not coroutine.resume(threads[k]) then
-			table.remove(threads, k)
-		else
-			k = k + 1
+local host, server, state = nil, nil, NetworkState.None
+
+function Network.getState()
+	return state
+end
+
+function Network.getServerState()
+	if server then
+		return server:state()
+	end
+
+	return "disconnected"
+end
+
+function Network.getID()
+	if Network.getState() == NetworkState.Client then
+		return server:connect_id()
+	end
+
+	return nil
+end
+
+function Network.host(port)
+	if Network.getState() == NetworkState.None then
+		host = enet.host_create('*:' .. (port or Network.DefaultPort))
+
+		state = NetworkState.Server
+	end
+end
+
+function Network.connect(address, port)
+	if Network.getState() == NetworkState.None then
+		host = enet.host_create()
+		server = host:connect(address .. ':' .. (port or Network.DefaultPort))
+
+		server:timeout(5, 5000, 10000)
+
+		state = NetworkState.Client
+	end
+end
+
+function Network.getPeerCount()
+	if Network.getState() == NetworkState.Server then
+		local count = 0
+
+		for index = 1, host:peer_count() do
+			if host:get_peer(index):state() ~= "disconnected" then
+				count = count + 1
+			end
+		end
+
+		return count
+	end
+
+	return 0
+end
+
+function Network.getPeers()
+	if Network.getState() == NetworkState.Server then
+		local peers = {}
+
+		for index = 1, host:peer_count() do
+			if host:get_peer(index):state() ~= "disconnected" then
+				table.insert(peers, host:get_peer(index))
+			end
+		end
+
+		return table.iterator(peers)
+	end
+
+	return function()
+		return nil
+	end
+end
+
+function Network.getPeer(index)
+	if Network.getState() == NetworkState.Server and index < host:peer_count() then
+		return host:get_peer(index)
+	end
+
+	return nil
+end
+
+function Network.getPeerByID(id)
+	for peer in Network.getPeers() do
+		if peer:connect_id() == id then
+			return peer
+		end
+	end
+
+	return peer
+end
+
+function Network.getEvents()
+	return function()
+		if Network.getState() ~= NetworkState.None then
+			return host:service()
 		end
 	end
 end
 
-function Network.send(socket, data, callback)
-	table.insert(threads, coroutine.create(function()
-		local bytesSent, closed = 0, false
+function Network.send(event, data, peer, channel, flag)
+	if state ~= NetworkState.None then
+		peer = peer or server
 
-		while bytesSent < #data and not closed do
-			local lastByte, error = socket:send(data, bytesSent)
-
-			bytesSent = bytesSent + lastByte
-			closed = error == 'closed'
-
-			coroutine.yield()
-		end
-
-		callback(closed)
-	end))
+		peer:send(MessagePack.pack({event, data}))
+	end
 end
 
-function Network.receive(socket, pattern, callback)
-	table.insert(threads, coroutine.create(function()
-		local data, error, closed = nil, nil, false
-
-		while not data and not closed do
-			data, error = socket:receive(pattern)
-
-			closed = error == 'closed'
-
-			coroutine.yield()
-		end
-
-		callback(data, closed)
-	end))
+function Network.broadcast(event, data, channel, flag)
+	if state == NetworkState.Server then
+		host:broadcast(MessagePack.pack({event, data}), channel, flag)
+	end
 end
 
-while true do
-	if #threads == 0 then
-		love.timer.sleep(0.1)
-	else
-		Network.update()
+function Network.close()
+	if state ~= NetworkState.None then
+		if server then
+			server:disconnect_now()
+		else
+			for peer in Network.getPeers() do
+				peer:disconnect_now()
+			end
+		end
+
+		host:destroy()
+
+		host = nil
+		server = nil
+
+		state = NetworkState.None
 	end
 end
