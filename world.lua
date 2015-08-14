@@ -151,6 +151,8 @@ function World.update(delta)
 							print("Client: Removing entity " .. entity.class.name)
 						end
 					end
+				elseif event == "Reset" then
+					World.reset()
 				end
 			end
 		end
@@ -279,6 +281,8 @@ function World.reset(exit)
 
 	-- Default spawns
 	if Network.getState() ~= NetworkState.None then
+		Network.broadcast("Reset")
+
 		for peer in Network.getPeers() do
 			if peer:state() == "connected" then
 				World.addEntity(Ship(peer:connect_id(), Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
