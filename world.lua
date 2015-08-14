@@ -279,7 +279,7 @@ function World.draw()
 		local offset = 60
 
 		for peer in Network.getPeers() do
-			love.graphics.print(("Peer #%i: %ims"):format(peer:connect_id(), peer:last_round_trip_time()), 10, offset)
+			love.graphics.print(("%s (%i): %ims"):format(Network.getUsername(peer:connect_id()), peer:connect_id(), peer:last_round_trip_time()), 10, offset)
 			offset = offset + 20
 		end
 	love.graphics.pop()
