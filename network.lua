@@ -52,12 +52,12 @@ function Network.connect(address, port)
 	end
 end
 
-function Network.getPeerCount()
+function Network.getPeerCount(state)
 	if Network.getState() == NetworkState.Server then
 		local count = 0
 
 		for index = 1, host:peer_count() do
-			if host:get_peer(index):state() ~= "disconnected" then
+			if host:get_peer(index):state() == (state or "connected") then
 				count = count + 1
 			end
 		end
@@ -68,12 +68,12 @@ function Network.getPeerCount()
 	return 0
 end
 
-function Network.getPeers()
+function Network.getPeers(state)
 	if Network.getState() == NetworkState.Server then
 		local peers = {}
 
 		for index = 1, host:peer_count() do
-			if host:get_peer(index):state() ~= "disconnected" then
+			if host:get_peer(index):state() == (state or "connected") then
 				table.insert(peers, host:get_peer(index))
 			end
 		end
