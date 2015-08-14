@@ -193,7 +193,7 @@ function World.update(delta)
 	local shipCount = 0
 
 	for ship in World.getEntities(Ship) do
-		if Network.getState() == NetworkState.Client then
+		if Network.getState() == NetworkState.None then
 			if ship:isRemoved() and ship:isLocalPlayer() then
 				World.reset()
 			end
