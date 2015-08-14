@@ -88,9 +88,11 @@ function VectorEntity:draw(color)
 		love.graphics.translate(self.position:values())
 		love.graphics.rotate(self.rotation)
 
+		love.graphics.setLineWidth(1)
+		love.graphics.setLineStyle('rough')
+
 		for k, line in ipairs(self.lines) do
 			love.graphics.setColor((color or line.color):values())
-			love.graphics.setLineWidth(1)
 			love.graphics.line(line.position1.x, line.position1.y, line.position2.x, line.position2.y)
 		end
 	love.graphics.pop()
