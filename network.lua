@@ -4,6 +4,8 @@ Network = {}
 
 Network.DefaultUsername = "John Cena"
 Network.DefaultPort = 8888
+Network.TickRate = 10
+Network.LerpTime = 1 / Network.TickRate
 
 NetworkState = {
 	None = 0,
@@ -24,6 +26,16 @@ function Network.getServerState()
 	end
 
 	return "disconnected"
+end
+
+function Network.getPing(id)
+	if Network.getState() == NetworkState.Client then
+		return server:last_round_trip_time() / 1000
+	elseif Network.getPeerByID(id) then
+		return Network.getPeerByID(id):last_round_trip_time() / 1000
+	end
+
+	return 0
 end
 
 function Network.getID()
@@ -57,7 +69,7 @@ end
 
 function Network.host(port)
 	if Network.getState() == NetworkState.None then
-		host = enet.host_create('*:' .. (port or Network.DefaultPort))
+		host = enet.host_create('*:' .. (port or Network.DefaultPort), 8, 2)
 
 		if host then
 			state = NetworkState.Server
@@ -73,7 +85,7 @@ end
 function Network.connect(address, port)
 	if Network.getState() == NetworkState.None then
 		host = enet.host_create()
-		server = host:connect(address .. ':' .. (port or Network.DefaultPort))
+		server = host:connect(address .. ':' .. (port or Network.DefaultPort), 2)
 
 		server:timeout(5, 5000, 10000)
 
