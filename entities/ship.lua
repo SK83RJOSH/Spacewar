@@ -167,16 +167,22 @@ function Ship:buildNetworkUpdate()
 end
 
 function Ship:applyNetworkUpdate(data)
-	self.position.x,
-	self.position.y,
-	self.velocity.x,
-	self.velocity.y,
-	self.rotation,
-	self.vkLeft,
-	self.vkRight,
-	self.vkForward,
-	self.vkReverse,
-	self.vkFire = unpack(data)
+	self.timer = Timer()
+	self.nextUpdate = data
+	self.lastUpdate = self:buildNetworkUpdate()
+
+	if not self:isLocalPlayer() then
+		self.position.x,
+		self.position.y,
+		self.velocity.x,
+		self.velocity.y,
+		self.rotation,
+		self.vkLeft,
+		self.vkRight,
+		self.vkForward,
+		self.vkReverse,
+		self.vkFire = unpack(data)
+	end
 end
 
 function Ship:update(delta)
@@ -284,6 +290,28 @@ function Ship:update(delta)
 		self.vkLeft = love.keyboard.isDown('a') and 1 or 0
 		self.vkRight = love.keyboard.isDown('d') and 1 or 0
 		self.vkFire = love.keyboard.isDown(' ') and 1 or 0
+	elseif self.timer then
+		local lastPosition = Vector2()
+		local lastVelocity = Vector2()
+		local lastRotation = 0
+
+		lastPosition.x, lastPosition.y, lastVelocity.x, lastVelocity.y, lastRotation = unpack(self.lastUpdate)
+
+		local nextPosition = Vector2()
+		local nextVelocity = Vector2()
+		local nextRotation = 0
+
+		nextPosition.x, nextPosition.y, nextVelocity.x, nextVelocity.y, nextRotation = unpack(self.nextUpdate)
+
+		self.position = math.lerp(lastPosition, nextPosition, self.timer:getTime() / Network.LerpTime)
+		self.velocity = math.lerp(lastVelocity, nextVelocity, self.timer:getTime() / Network.LerpTime)
+		self.rotation = math.lerp(lastRotation, nextRotation, self.timer:getTime() / Network.LerpTime)
+
+		self.forwardThrusters:update(delta)
+		self.reverseThrustersLeft:update(delta)
+		self.reverseThrustersRight:update(delta)
+
+		return
 	end
 
 	if self.vkReverse ~= 0 or self.vkForward ~= 0 then

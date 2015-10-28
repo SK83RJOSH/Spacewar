@@ -130,8 +130,22 @@ function love.keypressed(key, isRepeat)
 			if getGameState() == GameState.Game then
 				if key == 'r' or key == 'escape' then
 					setGameState(GameState.Menu)
+				elseif table.find({'w', 'a', 's', 'd', ' '}, key) and Network.getState() == NetworkState.Client then
+					Network.send("InputChanged", {
+						key, 1
+					}, nil, 1)
 				end
 			end
+		end
+	end
+end
+
+function love.keyreleased(key)
+	if getGameState() == GameState.Game then
+		if table.find({'w', 'a', 's', 'd', ' '}, key) and Network.getState() == NetworkState.Client then
+			Network.send("InputChanged", {
+				key, 0
+			}, nil, 1)
 		end
 	end
 end

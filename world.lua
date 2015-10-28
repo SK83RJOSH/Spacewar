@@ -62,26 +62,17 @@ local updateTimer = Timer()
 
 function World.update(delta)
 	if Network.getState() ~= Network.None then
-		if updateTimer:getTime() > 1 / 32 then
-			if Network.getState() == NetworkState.Server then
+		if Network.getState() == NetworkState.Server then
+			if updateTimer:getTime() > 1 / Network.TickRate then
 				for entity in World.getEntities() do
 					Network.broadcast("EntityUpdate", {
 						entity.__instance,
 						entity:buildNetworkUpdate()
-					})
+					}, 0, 'unreliable')
 				end
-			else
-				for ship in World.getEntities(Ship) do
-					if ship:isLocalPlayer() then
-						Network.send("EntityUpdate", {
-							ship.__instance,
-							ship:buildNetworkUpdate()
-						})
-					end
-				end
-			end
 
-			updateTimer:restart()
+				updateTimer:restart()
+			end
 		end
 
 		for event in Network.getEvents() do
@@ -124,13 +115,21 @@ function World.update(delta)
 				if Network.getState() == NetworkState.Server then
 					if event == "SetUsername" then
 						Network.setUsername(peer:connect_id(), data)
-					elseif event == "EntityUpdate" then
-						local instance, update = unpack(data)
+					elseif event == "InputChanged" then
+						local input, value = unpack(data)
 
-						for entity in World.getEntities() do
-							if entity.__instance == instance then
-								if not class.isInstance(entity, Ship) or entity.peerID == peer:connect_id() then
-									entity:applyNetworkUpdate(update)
+						for ship in World.getEntities(Ship) do
+							if ship.peerID == peer:connect_id() then
+								if input == 'w' then
+									ship.vkForward = value
+								elseif input == 's' then
+									ship.vkReverse = value
+								elseif input == 'a' then
+									ship.vkLeft = value
+								elseif input == 'd' then
+									ship.vkRight = value
+								elseif input == ' ' then
+									ship.vkFire = value
 								end
 							end
 						end
@@ -171,9 +170,7 @@ function World.update(delta)
 
 						for entity in World.getEntities() do
 							if entity.__instance == instance then
-								if not class.isInstance(entity, Ship) or not entity:isLocalPlayer() then
-									entity:applyNetworkUpdate(update)
-								end
+								entity:applyNetworkUpdate(update)
 							end
 						end
 					elseif event == "EntityRemove" then
