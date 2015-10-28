@@ -344,5 +344,9 @@ function World.reset(exit)
 
 	if Network.getState() ~= NetworkState.Client then
 		World.addEntity(Ship(Network.getID(), Vector2(love.graphics.getDimensions()) / 2, Color.White:copy()))
+
+		for k = 1, math.random(5) do
+			World.addEntity(Ship(-1, Vector2(math.random(love.graphics.getWidth()), math.random(love.graphics.getHeight())), Color.fromHSV(1, 1, math.random(360))))
+		end
 	end
 end
