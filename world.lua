@@ -128,7 +128,7 @@ function World.update(delta)
 									ship.vkLeft = value
 								elseif input == 'd' then
 									ship.vkRight = value
-								elseif input == ' ' then
+								elseif input == 'space' then
 									ship.vkFire = value
 								end
 							end

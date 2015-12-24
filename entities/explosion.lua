@@ -48,7 +48,7 @@ function Explosion:draw()
 			love.graphics.setColor(self.color:values())
 		end
 
-		love.graphics.setBlendMode('additive')
+		love.graphics.setBlendMode('add')
 		love.graphics.circle('fill', self.position.x, self.position.y, self.radius * (1 + time), 32)
 	love.graphics.pop()
 end

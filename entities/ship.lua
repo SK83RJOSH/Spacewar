@@ -285,11 +285,11 @@ function Ship:update(delta)
 	-- DEBUG CODE
 
 	if self:isLocalPlayer() then
-		self.vkForward = love.keyboard.isDown('w') and 1 or 0
-		self.vkReverse = love.keyboard.isDown('s') and 1 or 0
-		self.vkLeft = love.keyboard.isDown('a') and 1 or 0
-		self.vkRight = love.keyboard.isDown('d') and 1 or 0
-		self.vkFire = love.keyboard.isDown(' ') and 1 or 0
+		self.vkForward = love.keyboard.isScancodeDown('w') and 1 or 0
+		self.vkReverse = love.keyboard.isScancodeDown('s') and 1 or 0
+		self.vkLeft = love.keyboard.isScancodeDown('a') and 1 or 0
+		self.vkRight = love.keyboard.isScancodeDown('d') and 1 or 0
+		self.vkFire = love.keyboard.isScancodeDown('space') and 1 or 0
 	elseif self.timer then
 		local lastPosition = Vector2()
 		local lastVelocity = Vector2()

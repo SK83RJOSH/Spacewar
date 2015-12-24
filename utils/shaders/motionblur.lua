@@ -17,8 +17,13 @@ end
 
 function MotionBlur.update()
 	nextCanvas = table.remove(canvases, 1)
+	lastCanvas = love.graphics.getCanvas()
 
-	nextCanvas:clear()
+	-- Thanks 0.10.0; remove a feature that was useful so I have to do convoluted things to accomplish tasks that used to be simple.
+	love.graphics.setCanvas(nextCanvas)
+	love.graphics.clear()
+	love.graphics.setCanvas(lastCanvas)
+
 	canvases[#canvases + 1] = nextCanvas
 end
 

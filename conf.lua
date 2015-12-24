@@ -2,7 +2,7 @@ io.stdout:setvbuf('no')
 
 function love.conf(config)
 	config.identity = 'Spacewar'
-	config.version = '0.9.2'
+	config.version = '0.10.0'
 	config.console = false
 
 	config.window.title = 'Spacewar!'

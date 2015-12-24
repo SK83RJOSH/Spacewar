@@ -74,15 +74,15 @@ function GUI.textinput(text)
 	end
 end
 
-function GUI.keypressed(key, isRepeat)
-	if table.find({'up', 'down', 'left', 'right', 'return', 'escape'}, key) then
+function GUI.keypressed(key, scancode, isRepeat)
+	if table.find({'up', 'down', 'left', 'right', 'return', 'escape'}, scancode) then
 		cursorActive = false
 	else
 		GUI.resetCursor(true)
 	end
 
 	if GUI.getActiveMenu() then
-		GUI.getActiveMenu():keypressed(key, isRepeat)
+		GUI.getActiveMenu():keypressed(key, scancode, isRepeat)
 	end
 end
 

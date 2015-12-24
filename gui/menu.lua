@@ -117,7 +117,7 @@ function Menu:mousereleased(x, y, button)
 		if component.active == button then
 			component.active = false
 
-			if button == 'l' and component.hover and component.click then
+			if button == 1 and component.hover and component.click then
 				component:click()
 			end
 		end
@@ -132,22 +132,22 @@ function Menu:textinput(text)
 	end
 end
 
-function Menu:keypressed(key, isRepeat)
-	if key == 'escape' and not isRepeat then
+function Menu:keypressed(key, scancode, isRepeat)
+	if scancode == 'escape' and not isRepeat then
 		GUI.popMenu()
-	elseif key == 'down' then
+	elseif scancode == 'down' then
 		self:selectNext()
-	elseif key == 'up' then
+	elseif scancode == 'up' then
 		self:selectPrev()
-	elseif table.find({'left', 'right', 'return'}, key) and not GUI.isCursorActive() then
+	elseif table.find({'left', 'right', 'return'}, scancode) and not GUI.isCursorActive() then
 		for component in self:getComponents() do
 			if component.active then
-				if component.click and (key == 'return' or class.isInstance(component, ToggleComponent)) then
+				if component.click and (scancode == 'return' or class.isInstance(component, ToggleComponent)) then
 					component:click()
 				elseif class.isInstance(component, SliderComponent) then
-					if key == 'left' then
+					if scancode == 'left' then
 						component.value = math.clamp(component.value - 0.1, 0, 1)
-					elseif key == 'right' then
+					elseif scancode == 'right' then
 						component.value = math.clamp(component.value + 0.1, 0, 1)
 					end
 
@@ -160,7 +160,7 @@ function Menu:keypressed(key, isRepeat)
 	else
 		for component in self:getComponents() do
 			if component.keypressed then
-				component:keypressed(key, isRepeat)
+				component:keypressed(key, scancode, isRepeat)
 			end
 		end
 	end

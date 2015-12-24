@@ -26,6 +26,7 @@ function Bloom.preDraw()
 	lastCanvas = love.graphics.getCanvas()
 
 	love.graphics.setCanvas(canvas)
+	love.graphics.clear()
 end
 
 function Bloom.postDraw()
@@ -33,19 +34,19 @@ function Bloom.postDraw()
 
 	lastCanvas = love.graphics.getCanvas()
 
-	pass1:clear()
-	pass2:clear()
 
 	love.graphics.push('all')
 		love.graphics.setShader(Assets.shaders.blur)
 		Assets.shaders.blur:send('horizontal', true)
 
 		love.graphics.setCanvas(pass1)
+		love.graphics.clear()
 		love.graphics.draw(canvas)
 
 		Assets.shaders.blur:send('horizontal', false)
 
 		love.graphics.setCanvas(pass2)
+		love.graphics.clear()
 		love.graphics.draw(pass1)
 	love.graphics.pop()
 
@@ -53,11 +54,9 @@ function Bloom.postDraw()
 	love.graphics.draw(canvas)
 
 	love.graphics.push('all')
-		love.graphics.setBlendMode('additive')
+		love.graphics.setBlendMode('add')
 		love.graphics.draw(pass2)
 	love.graphics.pop()
-
-	canvas:clear()
 end
 
 return Bloom

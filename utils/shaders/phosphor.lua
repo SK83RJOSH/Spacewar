@@ -11,6 +11,7 @@ function Phosphor.preDraw()
 	lastCanvas = love.graphics.getCanvas()
 
 	love.graphics.setCanvas(canvas)
+	love.graphics.clear()
 end
 
 function Phosphor.postDraw()
@@ -18,11 +19,8 @@ function Phosphor.postDraw()
 
 	love.graphics.push('all')
 		love.graphics.setShader(Assets.shaders.phosphor)
-
 		love.graphics.draw(canvas)
 	love.graphics.pop()
-
-	canvas:clear()
 end
 
 return Phosphor

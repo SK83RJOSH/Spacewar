@@ -81,7 +81,7 @@ function love.mousepressed(x, y, button)
 		GUI.mousepressed(x, y, button)
 	elseif getGameState() == GameState.Game then
 		if Network.getState() ~= NetworkState.Client then
-			if button == 'l' then
+			if button == 1 then
 				World.addEntity(
 					PhotonBeam(
 						Vector2(x, y),
@@ -89,9 +89,9 @@ function love.mousepressed(x, y, button)
 						Vector2((math.random() * 2) - 1, (math.random() * 2) - 1) * 500
 					)
 				)
-			elseif button == 'm' then
+			elseif button == 3 then
 				World.addEntity(Sun(Vector2(x, y)))
-			elseif button == 'r' then
+			elseif button == 2 then
 				local peerID = Network.getID()
 
 				for ship in World.getEntities(Ship) do
@@ -118,19 +118,19 @@ function love.textinput(text)
 	end
 end
 
-function love.keypressed(key, isRepeat)
+function love.keypressed(key, scancode, isRepeat)
 	if getGameState() == GameState.Menu then
-		GUI.keypressed(key, isRepeat)
+		GUI.keypressed(key, scancode, isRepeat)
 	end
 
 	if not isRepeat then
-		if key == 'f11' then
+		if scancode == 'f11' then
 			love.window.setFullscreen(not love.window.getFullscreen())
 		else
 			if getGameState() == GameState.Game then
-				if key == 'r' or key == 'escape' then
+				if scancode == 'r' or scancode == 'escape' then
 					setGameState(GameState.Menu)
-				elseif table.find({'w', 'a', 's', 'd', ' '}, key) and Network.getState() == NetworkState.Client then
+				elseif table.find({'w', 'a', 's', 'd', 'space'}, scancode) and Network.getState() == NetworkState.Client then
 					Network.send("InputChanged", {
 						key, 1
 					}, nil, 1)
@@ -140,9 +140,9 @@ function love.keypressed(key, isRepeat)
 	end
 end
 
-function love.keyreleased(key)
+function love.keyreleased(key, scancode)
 	if getGameState() == GameState.Game then
-		if table.find({'w', 'a', 's', 'd', ' '}, key) and Network.getState() == NetworkState.Client then
+		if table.find({'w', 'a', 's', 'd', 'space'}, scancode) and Network.getState() == NetworkState.Client then
 			Network.send("InputChanged", {
 				key, 0
 			}, nil, 1)

@@ -12,7 +12,5 @@ function StarField.draw()
 	love.graphics.push("all")
 		love.graphics.setShader(Assets.shaders.starfield)
 		love.graphics.draw(canvas)
-
-		canvas:clear()
 	love.graphics.pop()
 end
