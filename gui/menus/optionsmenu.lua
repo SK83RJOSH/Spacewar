@@ -47,7 +47,7 @@ function OptionsMenu:init()
 	end))
 
 	self:addComponent(InputComponent(Vector2(-1, offset + 225), tostring(Settings.get('network_port') or ""), "Port (Default: " .. Network.DefaultPort .. ")", 5, "0123456789", function(value)
-		Settings.set('network_port', tonumber(value) or "")
+		Settings.set('network_port', tonumber(value) or nil)
 	end))
 
 	self:addComponent(ButtonComponent(Vector2(-1, offset + 275), "Back", Assets.fonts.Hyperspace_Bold.large, function()
