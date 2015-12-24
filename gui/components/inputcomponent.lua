@@ -15,7 +15,7 @@ function InputComponent:textinput(text)
 	if not self.active or (self.filter and not self.filter:find(text)) then return end
 
 	if not self.maxLength or #self.text < self.maxLength then
-		self.text = self.text .. text
+		self:setText(self.text .. text)
 
 		if self.callback then
 			self.callback(self.text)
@@ -25,7 +25,7 @@ end
 
 function InputComponent:keypressed(key, scancode, isRepeat)
 	if scancode == 'backspace' and #self.text > 0 and self.active then
-		self.text = self.text:sub(0, #self.text - 1)
+		self:setText(self.text:sub(0, #self.text - 1))
 
 		if self.callback then
 			self.callback(self.text)
