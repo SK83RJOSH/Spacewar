@@ -1,7 +1,7 @@
 # Spacewar
-Love2D port of Spacewar!
+[LÖVE](https://love2d.org/) port of Spacewar!
 
-This project is meant to serve as an example project for other Love2D game developers to learn from, and will hopefully serve as a decent springboard for anyone hoping to become a bit more familiar with the framework. It will ultimately include examples of networking, joystick support, shaders and a variety of other features found within Love2D.
+This project is meant to serve as an example project for other [LÖVE](https://love2d.org/) game developers to learn from, and will hopefully serve as a decent springboard for anyone hoping to become a bit more familiar with the framework. It will ultimately include examples of networking, joystick support, shaders and a variety of other features found within [LÖVE](https://love2d.org/).
 
 The feature set will expand as time goes on (assuming I actually get around to working on this).
 
